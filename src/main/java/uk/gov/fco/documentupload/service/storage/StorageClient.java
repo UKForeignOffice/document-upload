@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 public abstract class StorageClient {
 
-    protected String toId(FileUpload file) {
+    String toId(FileUpload file) {
         String fileName = file.getName();
         String extension = "";
 
@@ -26,4 +26,6 @@ public abstract class StorageClient {
     public abstract InputStream get(String id) throws StorageException;
 
     public abstract boolean exists(String id) throws StorageException;
+
+    public abstract void delete(String id) throws StorageException;
 }

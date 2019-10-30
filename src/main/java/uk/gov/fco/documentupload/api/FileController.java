@@ -3,6 +3,7 @@ package uk.gov.fco.documentupload.api;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.glassfish.jersey.server.monitoring.ResponseMXBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -103,5 +104,18 @@ public class FileController {
 
         log.trace("Flushing response buffer");
         response.flushBuffer();
+    }
+
+    @DeleteMapping("/{id:.+}")
+    public ResponseEntity<?> delete(@PathVariable String id) {
+        log.debug("Deleting file with id {}", id);
+
+        try {
+            storageClient.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (StorageException e) {
+            log.error("Error deleting file", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

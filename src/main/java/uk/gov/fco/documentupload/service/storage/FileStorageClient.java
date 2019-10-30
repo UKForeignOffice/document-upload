@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 @Service
@@ -61,5 +63,16 @@ public class FileStorageClient extends StorageClient {
     @Override
     public boolean exists(String id) {
         return Files.exists(getPath(id));
+    }
+
+    @Override
+    public void delete(String id) throws StorageException {
+        try {
+            Files.delete(getPath(id));
+        } catch (NoSuchFileException e) {
+            // Ignore
+        } catch (IOException e) {
+            throw new StorageException("Error deleting file", e);
+        }
     }
 }
