@@ -6,6 +6,10 @@ spring:
       write_dates_as_timestamps: false
   resources:
     add-mappings: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 server:
   port: 9000
@@ -19,8 +23,15 @@ logging:
     root: ${ROOT_LOGGING_LEVEL:DEBUG}
     org.springframework: INFO
 
+clamav:
+  host: localhost
+  port: 3310
+  timeout: 30000
+
 storage:
   engine: file
+  file:
+    location: /tmp
 
 ---
 

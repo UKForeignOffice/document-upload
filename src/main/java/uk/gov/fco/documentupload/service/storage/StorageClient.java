@@ -1,15 +1,11 @@
 package uk.gov.fco.documentupload.service.storage;
 
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.util.UUID;
+import java.io.InputStream;
 
 public abstract class StorageClient {
 
-    protected String toId(MultipartFile file) {
-        String fileName = file.getOriginalFilename();
-        String id = UUID.randomUUID().toString();
+    protected String toId(FileUpload file) {
+        String fileName = file.getName();
         String extension = "";
 
         if (fileName != null) {
@@ -18,8 +14,16 @@ public abstract class StorageClient {
                 extension = fileName.substring(i);
             }
         }
-        return id + extension;
+        return file.getId() + extension;
     }
 
-    public abstract String store(MultipartFile file) throws StorageException;
+    public abstract String store(FileUpload file) throws StorageException;
+
+    public abstract long getSize(String id) throws StorageException;
+
+    public abstract String getContentType(String id) throws StorageException;
+
+    public abstract InputStream get(String id) throws StorageException;
+
+    public abstract boolean exists(String id) throws StorageException;
 }

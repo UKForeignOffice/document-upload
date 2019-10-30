@@ -4,9 +4,10 @@ import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Service
@@ -20,13 +21,45 @@ public class FileStorageClient extends StorageClient {
     }
 
     @Override
-    public String store(MultipartFile file) throws StorageException {
+    public String store(FileUpload file) throws StorageException {
         try {
             String id = toId(file);
-            file.transferTo(storageLocation.resolve(id));
+            Files.copy(file.getInputStream(), getPath(id));
             return id;
         } catch (IOException e) {
             throw new StorageException("Error copying file to destination", e);
         }
+    }
+
+    private Path getPath(String id) {
+        return storageLocation.resolve(id);
+    }
+
+    @Override
+    public long getSize(String id) throws StorageException {
+        try {
+            return Files.size(getPath(id));
+        } catch (IOException e) {
+            throw new StorageException("Error reading file size", e);
+        }
+    }
+
+    @Override
+    public String getContentType(String id) {
+        return null;
+    }
+
+    @Override
+    public InputStream get(String id) throws StorageException {
+        try {
+            return Files.newInputStream(getPath(id));
+        } catch (IOException e) {
+            throw new StorageException("Error opening file", e);
+        }
+    }
+
+    @Override
+    public boolean exists(String id) {
+        return Files.exists(getPath(id));
     }
 }
