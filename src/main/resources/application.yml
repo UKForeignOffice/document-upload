@@ -29,9 +29,11 @@ clamav:
   timeout: 30000
 
 storage:
-  engine: file
+  engine: ${STORAGE_ENGINE:file}
   file:
     location: /tmp
+  s3:
+    bucket: ${S3_BUCKET}
 
 ---
 
