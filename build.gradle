@@ -1,0 +1,44 @@
+
+plugins {
+    id 'org.springframework.boot' version '2.1.2.RELEASE'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://clojars.org/repo" }
+    jcenter()
+}
+
+apply plugin: 'java'
+apply plugin: 'io.spring.dependency-management'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+group = 'uk.gov.fco.dopcumentupload'
+version = '1.0.0'
+
+bootJar {
+    archiveName = 'document-upload.jar'
+    mainClassName = 'uk.gov.fco.documentupload.Application'
+}
+
+dependencies {
+    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+
+    compileOnly 'org.projectlombok:lombok:1.18.10'
+    compile 'org.springdoc:springdoc-openapi-ui:1.1.39'
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.springframework.boot:spring-boot-starter-jersey'
+    compile 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+    testCompile 'org.springframework.security:spring-security-test'
+    testCompile 'org.mockito:mockito-core:2.8.47'
+}
+
+compileJava.dependsOn(processResources)
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.6'
+}

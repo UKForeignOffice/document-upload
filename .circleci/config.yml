@@ -1,0 +1,74 @@
+version: 2.1
+
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/openjdk:8-jdk
+
+jobs:
+  test:
+    <<: *defaults
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+            - v1-dependencies-
+
+      - run: ./gradlew dependencies
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+
+      - run: ./gradlew build
+
+      - store_test_results:
+          path: build/test-results
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+
+  publish:
+    <<: *defaults
+
+    docker:
+      - image: circleci/python:2.7-jessie
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - setup_remote_docker
+
+      - run:
+          name: Checkout CI Support
+          command: git clone git@github.com:CautionYourBlast/ci-support.git
+
+      - run:
+          name: Install awscli
+          command: sudo pip install awscli
+
+      - run:
+          name: Publish docker image
+          command: ci-support/docker/publish.sh fco document-upload
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - tag.txt
+
+workflows:
+  "Test, publish and deploy":
+    jobs:
+      - test
+      - publish:
+          requires:
+            - test

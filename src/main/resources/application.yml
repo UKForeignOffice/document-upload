@@ -1,0 +1,28 @@
+
+spring:
+  jackson:
+    default-property-inclusion: non_absent
+    serialization:
+      write_dates_as_timestamps: false
+  resources:
+    add-mappings: false
+
+server:
+  port: 9000
+  servlet:
+    context-path: /v1
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: ${ROOT_LOGGING_LEVEL:DEBUG}
+    org.springframework: INFO
+
+storage:
+  engine: file
+
+---
+
+spring:
+  profiles: production
