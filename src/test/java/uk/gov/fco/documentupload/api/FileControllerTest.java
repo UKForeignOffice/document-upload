@@ -1,0 +1,48 @@
+package uk.gov.fco.documentupload.api;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
+import uk.gov.fco.documentupload.service.storage.FileStorageClient;
+
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class FileControllerTest {
+
+    private MockMvc mockMvc;
+
+    @InjectMocks
+    private FileController controller;
+
+    @Mock
+    private AntiVirusService antiVirusService;
+
+    @Mock
+    private FileStorageClient storageClient;
+
+    @Before
+    public void setup() {
+        initMocks(this);
+        mockMvc = standaloneSetup(controller)
+                .build();
+    }
+
+    @Test
+    public void shouldReturn404ForMissingFile() throws Exception {
+        mockMvc.perform(get("/files/cyb.jpg"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+}

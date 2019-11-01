@@ -21,12 +21,14 @@ logging:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
   level:
     root: ${ROOT_LOGGING_LEVEL:DEBUG}
+    org.apache: INFO
     org.springframework: INFO
 
-clamav:
-  host: localhost
-  port: 3310
-  timeout: 30000
+antivirus:
+  enabled: ${ANTIVIRUS_ENABLED:false}
+  host: ${ANTIVIRUS_HOST:localhost}
+  port: ${ANTIVIRUS_PORT:3310}
+  timeout: ${ANTIVIRUS_TIMEOUT:30000}
 
 storage:
   engine: ${STORAGE_ENGINE:file}

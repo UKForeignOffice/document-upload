@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "clamav")
-public class ClamAVProperties {
+public class AntiVirusProperties {
 
     private String host;
 
