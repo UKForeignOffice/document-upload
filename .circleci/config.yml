@@ -97,9 +97,9 @@ workflows:
           requires:
             - test
       - deploy:
-      requires:
-        - publish
-      filters:
-        branches:
-          only:
-            - master
+          requires:
+            - publish
+          filters:
+            branches:
+              only:
+                - master
