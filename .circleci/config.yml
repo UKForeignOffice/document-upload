@@ -65,6 +65,30 @@ jobs:
           paths:
             - tag.txt
 
+  deploy:
+    <<: *defaults
+
+    docker:
+      - image: circleci/python:2.7-jessie
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: Checkout CI Support
+          command: git clone git@github.com:CautionYourBlast/ci-support.git
+
+      - run:
+          name: Deploy
+          command: |
+            TAG=`cat tag.txt`
+            echo "Someday I'll deploy version ${TAG}"
+
+      - slack/status
+
 workflows:
   "Test, publish and deploy":
     jobs:
@@ -72,3 +96,10 @@ workflows:
       - publish:
           requires:
             - test
+      - deploy:
+      requires:
+        - publish
+      filters:
+        branches:
+          only:
+            - master
