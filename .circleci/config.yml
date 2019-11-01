@@ -5,6 +5,9 @@ defaults: &defaults
   docker:
     - image: circleci/openjdk:8-jdk
 
+orbs:
+  slack: circleci/slack@0.1.0
+
 jobs:
   test:
     <<: *defaults
@@ -33,6 +36,9 @@ jobs:
           root: .
           paths:
             - build
+
+      - slack/status:
+          fail_only: "true"
 
   publish:
     <<: *defaults
@@ -64,6 +70,9 @@ jobs:
           root: .
           paths:
             - tag.txt
+
+      - slack/status:
+          fail_only: "true"
 
   deploy:
     <<: *defaults
