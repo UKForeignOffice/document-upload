@@ -5,9 +5,8 @@ either stores it or rejects it.
 
 ## Configuration
 
-Application configuration can be found in `application.yml`. Some of these 
-properties can be overridden at deployment timee using environment 
-variables.  
+Application configuration can be found in `application.yml`. Some of these properties 
+can be overridden at deployment time using environment variables.  
 
 Environment variable | Default | Description
 --- | --- | ---
@@ -19,10 +18,15 @@ ANTIVIRUS_HOST | localhost | Network host of the antivirus service
 ANTIVIRUS_PORT | 3310 | Network port of the antivirus service
 ANTIVIRUS_TIMEOUT | 30000 | Virus scanning timeout 
 
+## AntiVirus
+
+Scanning inbound files for viruses is supported by integration with ClamAV. An example
+ClamAV service is configured in `docker-compose.yml`. 
+
 ## Permissions
 
-There are no explicit access controls to this service. Knowledge of a file
-ID is considered permission to manage that file, e.g. delete it.
+There are no explicit access controls to this service. Knowledge of a file ID is 
+considered permission to manage that file, e.g. delete it.
 
 ## Deployment
 

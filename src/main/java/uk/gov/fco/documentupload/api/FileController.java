@@ -1,9 +1,15 @@
 package uk.gov.fco.documentupload.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.glassfish.jersey.server.monitoring.ResponseMXBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,10 +44,43 @@ public class FileController {
     }
 
     @PostMapping
-    public DeferredResult<ResponseEntity<?>> store(MultipartFile file, UriComponentsBuilder builder) {
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "No file was uploaded"),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Uploaded file contains a virus"),
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "File stored successfully",
+                    headers = @Header(
+                            name = "Location",
+                            description = "Location of the uploaded file")),
+            @ApiResponse(
+                    responseCode = "202",
+                    description = "Internal request processing is taking a long time, but the request has been accepted")
+    })
+    @Operation(
+            summary = "Store a file",
+            description = "Scans the file for viruses and returns the URL the file can be retrieved from."
+    )
+    public DeferredResult<ResponseEntity<Void>> store(
+            @Parameter(
+                    name = "file",
+                    description = "The file to store",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(
+                                    type = "string",
+                                    format = "binary"
+                            )
+                    )
+            ) MultipartFile file,
+            UriComponentsBuilder builder) {
         log.debug("Storing {}", file);
 
-        DeferredResult<ResponseEntity<?>> output = new DeferredResult<>(REQUEST_TIMEOUT);
+        DeferredResult<ResponseEntity<Void>> output = new DeferredResult<>(REQUEST_TIMEOUT);
 
         if (file == null) {
             output.setResult(ResponseEntity.badRequest().build());
@@ -58,9 +97,8 @@ public class FileController {
                     FileUpload upload = new FileUpload(file);
                     if (!antiVirusService.isClean(upload)) {
                         log.trace("Virus scan failed for file");
-                        // TODO: is there a better status code to use for "there's a virus"
                         output.setResult(ResponseEntity
-                                .badRequest()
+                                .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                 .build());
                     } else {
                         log.trace("File is clean, storing");
@@ -84,7 +122,35 @@ public class FileController {
     }
 
     @GetMapping("/{id:.+}")
-    public void retrieve(@PathVariable String id, HttpServletResponse response) throws IOException {
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "File retrieved OK",
+                    content = @Content(
+                            schema = @Schema(
+                                    type = "string",
+                                    format = "binary"
+                            )
+                    )),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No file was found"),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "There was an internal error"),
+    })
+    @Operation(
+            summary = "Retrieve a file",
+            description = "Returns the file with the given ID.."
+    )
+    public void retrieve(
+            @Parameter(
+                    name = "id",
+                    description = "The ID of the file to retrieve",
+                    required = true,
+                    schema = @Schema(type = "string"))
+            @PathVariable String id,
+            HttpServletResponse response) throws IOException {
         log.debug("Retrieving file with id {}", id);
 
         try {
@@ -93,6 +159,7 @@ public class FileController {
                 response.setStatus(HttpStatus.NOT_FOUND.value());
             } else {
                 log.trace("File exists, setting headers and streaming");
+                response.setStatus(HttpStatus.OK.value());
                 response.setContentLength((int) storageClient.getSize(id));
                 response.setContentType(storageClient.getContentType(id));
                 IOUtils.copy(storageClient.get(id), response.getOutputStream());
@@ -107,7 +174,24 @@ public class FileController {
     }
 
     @DeleteMapping("/{id:.+}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "File deleted OK"),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "There was an internal error"),
+    })
+    @Operation(
+            summary = "Delete a file"
+    )
+    public ResponseEntity<Void> delete(
+            @Parameter(
+                    name = "id",
+                    description = "The ID of the file to retrieve",
+                    required = true,
+                    schema = @Schema(type = "string"))
+            @PathVariable String id) {
         log.debug("Deleting file with id {}", id);
 
         try {

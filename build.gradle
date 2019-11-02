@@ -21,6 +21,9 @@ version = '1.0.0'
 bootJar {
     archiveName = 'document-upload.jar'
     mainClassName = 'uk.gov.fco.documentupload.Application'
+    manifest {
+        attributes "Implementation-Version": version
+    }
 }
 
 dependencies {
