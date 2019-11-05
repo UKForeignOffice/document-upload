@@ -1,7 +1,9 @@
 package uk.gov.fco.documentupload.service.storage;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.tomcat.util.http.fileupload.MultipartStream.MalformedStreamException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedInputStream;
@@ -11,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
+@Slf4j
 public class FileUpload {
 
     private String id = UUID.randomUUID().toString();
@@ -30,7 +33,11 @@ public class FileUpload {
 
         path = Files.createTempFile(id, ".upload");
 
-        file.transferTo(path);
+        try {
+            file.transferTo(path);
+        } catch (MalformedStreamException e) {
+            log.debug("Ignoring malformed stream error");
+        }
     }
 
     public String getId() {
