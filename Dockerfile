@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:8-alpine
 
 ENV SPRING_PROFILES_ACTIVE production
 ENV ANTIVIRUS_ENABLED true
