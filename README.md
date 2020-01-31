@@ -3,6 +3,11 @@
 Document Upload service that accepts any file, scans it for viruses and then 
 either stores it or rejects it.
 
+## Goal
+This is an intentionally very simple service for storing files as there is cross over in 
+requirements with ETD. Work needs to be done to review and potentially consolidate the two 
+projects.
+
 ## Configuration
 
 Application configuration can be found in `application.yml`. Some of these properties 
