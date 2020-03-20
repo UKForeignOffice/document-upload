@@ -22,13 +22,13 @@ public class AntiVirusService {
     }
 
     public boolean isClean(FileUpload upload) throws IOException {
-        log.trace("Scanning file for viruses");
-        byte[] reply = clamAVClient.scan(upload.getInputStream());
-        if (!ClamAVClient.isCleanReply(reply)) {
-            String detail = new String(reply, StandardCharsets.US_ASCII);
-            log.warn("File contains virus, detail = {}", detail);
-            return false;
-        }
+//        log.trace("Scanning file for viruses");
+//        byte[] reply = clamAVClient.scan(upload.getInputStream());
+//        if (!ClamAVClient.isCleanReply(reply)) {
+//            String detail = new String(reply, StandardCharsets.US_ASCII);
+//            log.warn("File contains virus, detail = {}", detail);
+//            return false;
+//        }
         return true;
     }
 }

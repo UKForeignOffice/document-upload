@@ -7,6 +7,7 @@ import org.apache.tomcat.util.http.fileupload.MultipartStream.MalformedStreamExc
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -38,6 +39,13 @@ public class FileUpload {
         } catch (MalformedStreamException e) {
             log.debug("Ignoring malformed stream error");
         }
+    }
+
+    public FileUpload(String contentType, File file) {
+        this.size = file.length();
+        this.name = file.getName();
+        this.contentType = contentType;
+        this.path = file.toPath();
     }
 
     public String getId() {

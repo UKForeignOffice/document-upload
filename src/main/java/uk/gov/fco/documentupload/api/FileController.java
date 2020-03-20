@@ -18,12 +18,16 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
+import uk.gov.fco.documentupload.service.merger.Merger;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
 import uk.gov.fco.documentupload.service.storage.StorageClient;
 import uk.gov.fco.documentupload.service.storage.StorageException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
 @RestController
@@ -37,10 +41,15 @@ public class FileController {
 
     private StorageClient storageClient;
 
+    private Collection<Merger> mergers;
+
     @Autowired
-    public FileController(@NonNull AntiVirusService antiVirusService, @NonNull StorageClient storageClient) {
+    public FileController(@NonNull AntiVirusService antiVirusService,
+                          @NonNull StorageClient storageClient,
+                          @NonNull Collection<Merger> mergers) {
         this.antiVirusService = antiVirusService;
         this.storageClient = storageClient;
+        this.mergers = mergers;
     }
 
     @PostMapping
@@ -76,13 +85,13 @@ public class FileController {
                                     format = "binary"
                             )
                     )
-            ) MultipartFile file,
+            ) List<MultipartFile> files,
             UriComponentsBuilder builder) {
-        log.debug("Storing {}", file);
+        log.debug("Storing {}", files);
 
         DeferredResult<ResponseEntity<Void>> output = new DeferredResult<>(REQUEST_TIMEOUT);
 
-        if (file == null) {
+        if (files == null || files.isEmpty()) {
             output.setResult(ResponseEntity.badRequest().build());
         } else {
             output.onTimeout(() -> {
@@ -90,24 +99,46 @@ public class FileController {
                 output.setResult(ResponseEntity.accepted().build());
             });
 
-            // TODO: change this to ExecutorService configured via Spring and limited to X concurrent tasks
             ForkJoinPool.commonPool().submit(() -> {
                 log.trace("Processing store file in separate thread");
                 try {
-                    FileUpload upload = new FileUpload(file);
-                    if (!antiVirusService.isClean(upload)) {
+                    List<FileUpload> uploads = new ArrayList<>();
+                    for (MultipartFile file : files) {
+                        FileUpload fileUpload = new FileUpload(file);
+                        uploads.add(fileUpload);
+                    }
+
+                    Merger merger = mergers.stream()
+                            .filter(m -> m.supports(uploads))
+                            .findFirst()
+                            .orElseThrow(NoSupportedMergerException::new);
+
+                    boolean clean = true;
+                    for (FileUpload upload : uploads) {
+                        if (!antiVirusService.isClean(upload)) {
+                            clean = false;
+                            break;
+                        }
+                    }
+
+                    if (!clean) {
                         log.trace("Virus scan failed for file");
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                 .build());
                     } else {
                         log.trace("File is clean, storing");
-                        String id = storageClient.store(upload);
+                        String id = storageClient.store(merger.merge(uploads));
                         output.setResult(
                                 ResponseEntity
                                         .created(builder.path("/files/{id}").build(id))
                                         .build());
                     }
+                } catch (NoSupportedMergerException e) {
+                    log.info("No supported merger found", e);
+                    output.setResult(ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .build());
                 } catch (StorageException | IOException e) {
                     log.error("Error storing file", e);
                     output.setResult(ResponseEntity
