@@ -1,5 +1,6 @@
 package uk.gov.fco.documentupload.api;
 
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,7 +10,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
+import uk.gov.fco.documentupload.service.merger.Merger;
 import uk.gov.fco.documentupload.service.storage.FileStorageClient;
+
+import java.util.Collection;
 
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,6 +35,9 @@ public class FileControllerTest {
 
     @Mock
     private FileStorageClient storageClient;
+
+    @Mock
+    private Collection<Merger> mergers;
 
     @Before
     public void setup() {
