@@ -90,8 +90,8 @@ jobs:
 
       - kubernetes/update-container-image:
           namespace: fco-forms-test
-          container-image-updates: document-upload=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/document-upload:`cat tag.txt`
-          resource-name: deployment/document-upload
+          container-image-updates: documentupload=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/document-upload:`cat tag.txt`
+          resource-name: deployment/documentupload
 
 workflows:
   "Test, publish and deploy":
