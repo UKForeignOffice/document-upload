@@ -1,12 +1,13 @@
 version: 2.1
 
+orbs:
+  aws-eks: circleci/aws-eks@0.2.6
+  kubernetes: circleci/kubernetes@0.4.0
+
 defaults: &defaults
   working_directory: ~/repo
   docker:
     - image: circleci/openjdk:8-jdk
-
-orbs:
-  slack: circleci/slack@0.1.0
 
 jobs:
   test:
@@ -41,9 +42,6 @@ jobs:
           paths:
             - build
 
-      - slack/status:
-          fail_only: "true"
-
   publish:
     <<: *defaults
 
@@ -75,9 +73,6 @@ jobs:
           paths:
             - tag.txt
 
-      - slack/status:
-          fail_only: "true"
-
   deploy:
     <<: *defaults
 
@@ -85,18 +80,18 @@ jobs:
       - image: circleci/python:2.7-jessie
 
     steps:
-      - checkout
-
       - attach_workspace:
           at: .
 
-      - run:
-          name: Deploy
-          command: |
-            TAG=`cat tag.txt`
-            echo "Someday I'll deploy version ${TAG}"
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: fco-forms-test
+          aws-region: eu-west-2
+          install-kubectl: true
 
-      - slack/status
+      - kubernetes/update-container-image:
+          namespace: fco-forms-test
+          container-image-updates: document-upload=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/document-upload:`cat tag.txt`
+          resource-name: deployment/document-upload
 
 workflows:
   "Test, publish and deploy":
