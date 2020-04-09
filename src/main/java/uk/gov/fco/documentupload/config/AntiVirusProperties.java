@@ -1,10 +1,12 @@
 package uk.gov.fco.documentupload.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix = "antivirus")
+@Data
 public class AntiVirusProperties {
 
     private String host;
@@ -13,27 +15,5 @@ public class AntiVirusProperties {
 
     private int timeout;
 
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public int getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
+    private boolean enabled;
 }

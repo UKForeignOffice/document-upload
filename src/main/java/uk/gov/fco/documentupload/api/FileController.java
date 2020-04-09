@@ -76,8 +76,8 @@ public class FileController {
     )
     public DeferredResult<ResponseEntity<Void>> store(
             @Parameter(
-                    name = "file",
-                    description = "The file to store, max size 5mb",
+                    name = "files",
+                    description = "The files to store, max size 5mb",
                     required = true,
                     content = @Content(
                             schema = @Schema(
