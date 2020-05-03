@@ -36,6 +36,9 @@ public class ImageMerger implements Merger {
 
     @Override
     public FileUpload merge(List<FileUpload> uploads) throws IOException {
+        if (uploads.size() == 1) {
+            return uploads.get(0);
+        }
 
         List<BufferedImage> images = new ArrayList<>();
         int width = 0;
@@ -49,7 +52,7 @@ public class ImageMerger implements Merger {
             height += image.getHeight() + PADDING;
         }
 
-        BufferedImage combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics graphics = combined.getGraphics();
         int currentY = 0;
 

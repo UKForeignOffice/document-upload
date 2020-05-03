@@ -33,6 +33,10 @@ public class PDFMerger implements Merger {
 
     @Override
     public FileUpload merge(List<FileUpload> uploads) throws IOException {
+        if (uploads.size() == 1) {
+            return uploads.get(0);
+        }
+
         PDFMergerUtility merger = new PDFMergerUtility();
         for (FileUpload upload : uploads) {
             merger.addSource(upload.getInputStream());
