@@ -122,12 +122,12 @@ public class FileController {
                     }
 
                     if (!clean) {
-                        log.trace("Virus scan failed for file");
+                        log.info("Virus scan failed for file");
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                 .build());
                     } else {
-                        log.trace("File is clean, storing");
+                        log.info("File is clean, storing");
                         String id = storageClient.store(merger.merge(uploads));
                         output.setResult(
                                 ResponseEntity
