@@ -1,13 +1,13 @@
 version: 2.1
 
 orbs:
-  aws-eks: circleci/aws-eks@0.2.6
-  kubernetes: circleci/kubernetes@0.4.0
+  aws-eks: circleci/aws-eks@2.2.0
+  kubernetes: circleci/kubernetes@1.3.1
 
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: circleci/openjdk:8-jdk
+    - image: cimg/openjdk:8.0
 
 jobs:
   test:
@@ -45,8 +45,12 @@ jobs:
   publish:
     <<: *defaults
 
+    parameters:
+      package_name:
+        type: string
+
     docker:
-      - image: circleci/python:2.7-jessie
+      - image: cimg/python:3.10
 
     steps:
       - checkout
@@ -57,16 +61,26 @@ jobs:
       - setup_remote_docker
 
       - run:
-          name: Checkout Docker publish script
-          command: curl https://gist.githubusercontent.com/superafroman/ca7422b3c925dfeba5854edcc1713d89/raw/77febaa0954dfa8ebc6598b1366b7f1f8e38d610/docker-publish.sh -O && chmod +x docker-publish.sh
+          name: Install awscli
+          command: pip3 install awscli
 
       - run:
-          name: Install awscli
-          command: sudo pip install awscli
+          name: "set $DOCKER_TAG"
+          command: |
+            if [ "<<pipeline.git.tag>>" == "" ]; then
+              DOCKER_TAG="<<pipeline.git.revision>>"
+            else
+              DOCKER_TAG="<<pipeline.git.tag>>"
+              DOCKER_TAG=${DOCKER_TAG:1}
+            fi
+            echo ${DOCKER_TAG} >> tag.txt
 
       - run:
           name: Publish docker image
-          command: ./docker-publish.sh eu-west-2 523508197323.dkr.ecr.eu-west-2.amazonaws.com fco document-upload
+          command: |
+            eval $(aws ecr get-login --no-include-email --region eu-west-2)
+            docker build -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:latest -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat ~/repo/tag.txt` .
+            docker image push --all-tags 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>
 
       - persist_to_workspace:
           root: .
@@ -74,14 +88,109 @@ jobs:
             - tag.txt
 
   deploy:
-    <<: *defaults
+    working_directory: ~/repo
 
-    docker:
-      - image: circleci/python:2.7-jessie
+    parameters:
+      namespace:
+        type: string
+      package_name:
+        type: string
+
+    machine:
+      image: ubuntu-2004:202201-02
 
     steps:
       - attach_workspace:
           at: .
+
+      - run:
+          name: Install the eksctl tool
+          command: |
+            if which eksctl > /dev/null; then
+              echo "eksctl is already installed"
+              exit 0
+            fi
+
+            mkdir -p eksctl_download
+            curl --silent --location --retry 5 "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
+              | tar xz -C eksctl_download
+            chmod +x eksctl_download/eksctl
+            SUDO=""
+            if [ $(id -u) -ne 0 ] && which sudo > /dev/null ; then
+              SUDO="sudo"
+            fi
+            $SUDO mv eksctl_download/eksctl /usr/local/bin/
+            rmdir eksctl_download
+
+      - run:
+          name: Install OpenVPN
+          command: |
+            sudo apt-get update
+            sudo apt-get install net-tools -y
+            sudo apt-get install openvpn openvpn-systemd-resolved -y
+
+      - run:
+          name: Check IP before VPN connection
+          command: |
+            ip a
+            echo "Public IP before VPN connection is $(curl checkip.amazonaws.com)"
+
+      - run:
+          name: VPN Setup
+          background: true
+          command: |
+            echo $VPN_CLIENT_CONFIG | base64 --decode > /tmp/config.ovpn
+
+            if grep -q auth-user-pass /tmp/config.ovpn; then
+              if [ -z "${VPN_USER:-}" ] || [ -z "${VPN_PASSWORD:-}" ]; then
+                echo "Your VPN client is configured with a user-locked profile. Make sure to set the VPN_USER and VPN_PASSWORD environment variables"
+                exit 1
+              else
+                printf "$VPN_USER\\n$VPN_PASSWORD" > /tmp/vpn.login
+              fi
+            fi
+
+            SYS_RES_DNS=$(systemd-resolve --status | grep 'DNS Servers'|awk '{print $3}')
+            echo $SYS_RES_DNS
+
+            phone_home=$(ss -Hnto state established '( sport = :ssh )' | head -n1 | awk '{ split($4, a, ":"); print a[1] }') || $(sudo netstat -an | grep ':22 .*ESTABLISHED' | head -n1 | awk '{ split($5, a, ":"); print a[1] }')
+            echo $phone_home
+
+            vpn_command=(sudo openvpn
+              --config /tmp/config.ovpn
+              --route $SYS_RES_DNS 255.255.255.255 net_gateway
+              --route 169.254.0.0 255.255.0.0 net_gateway
+              --script-security 2
+              --up /etc/openvpn/update-systemd-resolved --up-restart
+              --down /etc/openvpn/update-systemd-resolved --down-pre
+              --dhcp-option DOMAIN-ROUTE .)
+
+            if grep -q auth-user-pass /tmp/config.ovpn; then
+              vpn_command+=(--auth-user-pass /tmp/vpn.login)
+            fi
+
+            if [ -n "$phone_home" ]; then
+              vpn_command+=(--route $phone_home 255.255.255.255 net_gateway)
+            fi
+
+            for IP in $(host runner.circleci.com | awk '{ print $4; }')
+              do
+                vpn_command+=(--route $IP 255.255.255.255 net_gateway)
+                echo $IP
+            done
+
+            "${vpn_command[@]}" > /tmp/openvpn.log
+
+      - run:
+          name: Wait for the connection to be established and check IP
+          command: |
+            until [ -f /tmp/openvpn.log ] && [ "$(grep -c "Initialization Sequence Completed" /tmp/openvpn.log)" != 0 ]; do
+              echo "Attempting to connect to VPN server..."
+              sleep 3;
+            done
+
+            printf "\nVPN connected\n"
+            printf "\nPublic IP is now $(curl checkip.amazonaws.com)\n"
 
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: fco-forms-test
@@ -89,21 +198,43 @@ jobs:
           install-kubectl: true
 
       - kubernetes/update-container-image:
-          namespace: fco-forms-test
-          container-image-updates: documentupload=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/document-upload:`cat tag.txt`
-          resource-name: deployment/documentupload
+          namespace: << parameters.namespace >>
+          container-image-updates: << parameters.package_name >>=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat tag.txt`
+          resource-name: deployment/<< parameters.package_name >>
 
 workflows:
   "Test, publish and deploy":
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+
       - publish:
+          name: publish
+          package_name: document-upload
+          context:
+             - AWS
           requires:
             - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only:
+                - master
+                - deploy-test
+
       - deploy:
+          name: deploy
+          namespace: fco-forms-test
+          package_name: documentupload
+          context:
+            - AWS
+            - VPN
           requires:
             - publish
           filters:
             branches:
               only:
-                - master
+                - deploy-test
