@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
 import uk.gov.fco.documentupload.service.merger.Merger;
+import uk.gov.fco.documentupload.service.ocr.OCRService;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
 import uk.gov.fco.documentupload.service.storage.StorageClient;
 import uk.gov.fco.documentupload.service.storage.StorageException;
@@ -43,13 +44,17 @@ public class FileController {
 
     private Collection<Merger> mergers;
 
+    private OCRService ocrService;
+
     @Autowired
     public FileController(@NonNull AntiVirusService antiVirusService,
                           @NonNull StorageClient storageClient,
-                          @NonNull Collection<Merger> mergers) {
+                          @NonNull Collection<Merger> mergers,
+                          @NonNull OCRService ocrService) {
         this.antiVirusService = antiVirusService;
         this.storageClient = storageClient;
         this.mergers = mergers;
+        this.ocrService = ocrService;
     }
 
     @PostMapping
@@ -127,12 +132,26 @@ public class FileController {
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                 .build());
                     } else {
-                        log.info("File is clean, storing");
-                        String id = storageClient.store(merger.merge(uploads));
-                        output.setResult(
-                                ResponseEntity
-                                        .created(builder.path("/files/{id}").build(id))
-                                        .build());
+                        log.info("File is clean, checking image quality");
+                        boolean passedQualityCheck = true;
+                        for(FileUpload upload: uploads){
+                            if(!ocrService.passesQualityCheck(upload)){
+                                passedQualityCheck = false;
+                                break;
+                            }
+                        }
+                        if(!passedQualityCheck){
+                            log.info("Quality check failed for file");
+                            output.setResult(ResponseEntity
+                                    .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                                    .build());
+                        }else{
+                            String id = storageClient.store(merger.merge(uploads));
+                            output.setResult(
+                                    ResponseEntity
+                                            .created(builder.path("/files/{id}").build(id))
+                                            .build());
+                        }
                     }
                 } catch (NoSupportedMergerException e) {
                     log.info("No supported merger found", e);
