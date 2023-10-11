@@ -41,6 +41,11 @@ storage:
   s3:
     bucket: ${S3_BUCKET}
 
+ocr:
+  enable: ${ENABLE_QUALITY_CHECK:false}
+  sharpness:
+    threshold: ${SHARPNESS_THRESHOLD:60}
+
 ---
 
 spring:
