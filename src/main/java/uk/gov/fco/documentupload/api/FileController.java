@@ -146,6 +146,7 @@ public class FileController {
                                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                     .build());
                         }else{
+                            log.info("File is good quality, uploading");
                             String id = storageClient.store(merger.merge(uploads));
                             output.setResult(
                                     ResponseEntity
