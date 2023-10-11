@@ -42,7 +42,7 @@ storage:
     bucket: ${S3_BUCKET}
 
 ocr:
-  enable: ${ENABLE_QUALITY_CHECK:false}
+  enabled: ${ENABLE_QUALITY_CHECK:false}
   sharpness:
     threshold: ${SHARPNESS_THRESHOLD:60}
 
