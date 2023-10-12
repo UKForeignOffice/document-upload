@@ -79,7 +79,7 @@ public class FileController {
             summary = "Store a file",
             description = "Scans the file for viruses and returns the URL the file can be retrieved from."
     )
-    public DeferredResult<ResponseEntity<Void>> store(
+    public DeferredResult<ResponseEntity<String>> store(
             @Parameter(
                     name = "files",
                     description = "The files to store, max size 5mb",
@@ -94,7 +94,7 @@ public class FileController {
             UriComponentsBuilder builder) {
         log.debug("Storing {}", files);
 
-        DeferredResult<ResponseEntity<Void>> output = new DeferredResult<>(REQUEST_TIMEOUT);
+        DeferredResult<ResponseEntity<String>> output = new DeferredResult<>(REQUEST_TIMEOUT);
 
         if (files == null || files.isEmpty()) {
             output.setResult(ResponseEntity.badRequest().build());
@@ -130,7 +130,7 @@ public class FileController {
                         log.info("Virus scan failed for file");
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                .build());
+                                .body(""));
                     } else {
                         log.info("File is clean, checking image quality");
                         boolean passedQualityCheck = true;
@@ -144,26 +144,32 @@ public class FileController {
                             log.info("Quality check failed for file");
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                    .build());
+                                    .body(""));
                         }else{
-                            log.info("File is good quality, uploading");
+                            log.info("File is good quality, extracting data");
+                            String ocrResponse = "";
+                            for(FileUpload upload: uploads){
+                                ocrResponse = ocrService.extractData(upload);
+                            }
+                            log.info(String.format("Extraction result: %s", ocrResponse));
+                            log.info("Extraction complete, uploading file");
                             String id = storageClient.store(merger.merge(uploads));
                             output.setResult(
                                     ResponseEntity
                                             .created(builder.path("/files/{id}").build(id))
-                                            .build());
+                                            .body(ocrResponse));
                         }
                     }
                 } catch (NoSupportedMergerException e) {
                     log.info("No supported merger found", e);
                     output.setResult(ResponseEntity
                             .status(HttpStatus.BAD_REQUEST)
-                            .build());
+                            .body(""));
                 } catch (StorageException | IOException e) {
                     log.error("Error storing file", e);
                     output.setResult(ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .build());
+                            .body(""));
                 }
             });
         }
