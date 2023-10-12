@@ -11,6 +11,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
 import uk.gov.fco.documentupload.service.merger.Merger;
+import uk.gov.fco.documentupload.service.ocr.OCRService;
 import uk.gov.fco.documentupload.service.storage.FileStorageClient;
 
 import java.util.Collection;
@@ -38,6 +39,9 @@ public class FileControllerTest {
 
     @Mock
     private Collection<Merger> mergers;
+
+    @Mock
+    private OCRService ocrService;
 
     @Before
     public void setup() {
