@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.core.SdkField;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.rekognition.model.*;
 import software.amazon.awssdk.services.textract.TextractClient;
@@ -17,6 +16,7 @@ import uk.gov.fco.documentupload.service.storage.FileUpload;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import software.amazon.awssdk.services.rekognition.RekognitionClient;
 
@@ -46,7 +46,11 @@ public class OCRService {
             Image image = Image.builder().bytes(bytes).build();
             DetectLabelsRequest request = DetectLabelsRequest.builder().image(image).featuresWithStrings("IMAGE_PROPERTIES").build();
             DetectLabelsImageProperties results = rekognition.detectLabels(request).imageProperties();
-            return results.quality().sharpness() >= sharpnessThreshold;
+            Float sharpness = results.quality().sharpness();
+            log.info(String.format("Image sharpness: %s", sharpness.toString()));
+            boolean result = sharpness >= sharpnessThreshold;
+            log.info(String.format("Passes quality check: %s", result));
+            return result;
         }
         return true;
     }
@@ -74,10 +78,8 @@ public class OCRService {
                 AnalyzeDocumentResponse response = textract.analyzeDocument(request);
 
                 List<Block> blocks = response.blocks();
-                List<Block> queryBlocks = this.getBlocksByType(blocks, BlockType.QUERY);
-                List<Block> queryResultBlocks = this.getBlocksByType(blocks, BlockType.QUERY_RESULT);
 
-                HashMap<String, String> results = mapQueriesToAnswers(queryBlocks, queryResultBlocks);
+                HashMap<String, String> results = mapQueriesToAnswers(blocks);
 
                 return new ObjectMapper().writeValueAsString(results);
 
@@ -120,8 +122,10 @@ public class OCRService {
         return answer;
     }
 
-    private HashMap<String, String> mapQueriesToAnswers(List<Block> queryBlocks, List<Block> queryResultBlocks) {
+    private HashMap<String, String> mapQueriesToAnswers(List<Block> blocks) {
         HashMap<String, String> hashMap = new HashMap<>();
+        List<Block> queryBlocks = blocks.stream().filter(block -> block.blockType() == BlockType.QUERY).collect(Collectors.toList());
+        List<Block> queryResultBlocks = blocks.stream().filter(block -> block.blockType() == BlockType.QUERY_RESULT).collect(Collectors.toList());
         for (Block block : queryBlocks) {
             String answerId = getAnswerId(block.relationships());
             String answer = getAnswer(queryResultBlocks, answerId);
