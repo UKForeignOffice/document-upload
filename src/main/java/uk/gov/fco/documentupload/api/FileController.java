@@ -130,7 +130,7 @@ public class FileController {
                         log.info("Virus scan failed for file");
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                .body(""));
+                                .body("{\"error\": \"VirusScanError\", \"message\": \"Document contained a virus\"}"));
                     } else {
                         log.info("File is clean, checking image quality");
                         boolean passedQualityCheck = true;
@@ -144,32 +144,25 @@ public class FileController {
                             log.info("Quality check failed for file");
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                    .body(""));
+                                    .body("{\"error\": \"QualityThresholdError\", \"message\": \"Document did not pass quality threshold\"}"));
                         } else {
-                            log.info("File is good quality, extracting data");
-                            String ocrResponse = "";
-                            for (FileUpload upload : uploads) {
-                                ocrResponse = ocrService.extractData(upload);
-                            }
-                            log.info(String.format("Extraction result: %s", ocrResponse));
-                            log.info("Extraction complete, uploading file");
+                            log.info("File is good quality, uploading file");
                             String id = storageClient.store(merger.merge(uploads));
                             output.setResult(
                                     ResponseEntity
-                                            .created(builder.path("/files/{id}").build(id))
-                                            .body(ocrResponse));
+                                            .created(builder.path("/files/{id}").build(id)).build());
                         }
                     }
                 } catch (NoSupportedMergerException e) {
                     log.info("No supported merger found", e);
                     output.setResult(ResponseEntity
                             .status(HttpStatus.BAD_REQUEST)
-                            .body(""));
+                            .build());
                 } catch (StorageException | IOException e) {
                     log.error("Error storing file", e);
                     output.setResult(ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(""));
+                            .build());
                 }
             });
         }
