@@ -32,7 +32,7 @@ public class OCRService {
     private TextractClient textract;
 
     @Autowired
-    public OCRService(@Value("${ocr.enabled}") @NotNull boolean enabled, @Value("${ocr.sharpness.threshold}") int sharpnessThreshold){
+    public OCRService(@Value("${ocr.enabled}") @NotNull boolean enabled, @Value("${ocr.sharpness.threshold}") int sharpnessThreshold) {
         this.enabled = enabled;
         this.sharpnessThreshold = sharpnessThreshold;
         rekognition = RekognitionClient.builder().region(Region.EU_WEST_2).credentialsProvider(EnvironmentVariableCredentialsProvider.create()).build();
@@ -40,7 +40,7 @@ public class OCRService {
     }
 
     public boolean passesQualityCheck(FileUpload upload) throws IOException {
-        if(enabled){
+        if (enabled) {
             log.info("Starting image quality check");
             SdkBytes bytes = SdkBytes.fromInputStream(upload.getInputStream());
             Image image = Image.builder().bytes(bytes).build();
@@ -52,9 +52,9 @@ public class OCRService {
     }
 
     public String extractData(FileUpload upload) throws IOException {
-        if(enabled){
+        if (enabled) {
             log.info("Starting data extraction");
-            try{
+            try {
                 SdkBytes bytes = SdkBytes.fromInputStream(upload.getInputStream());
                 Document doc = Document.builder().bytes(bytes).build();
 
@@ -81,7 +81,7 @@ public class OCRService {
 
                 return new ObjectMapper().writeValueAsString(results);
 
-            }catch(TextractException e) {
+            } catch (TextractException e) {
                 log.error(e.getMessage());
             }
         }
@@ -90,18 +90,18 @@ public class OCRService {
 
     private List<Block> getBlocksByType(List<Block> blocks, BlockType type) {
         List<Block> queryBlocks = new ArrayList<>();
-        for(Block block : blocks){
-            if(block.blockType() == type){
+        for (Block block : blocks) {
+            if (block.blockType() == type) {
                 queryBlocks.add(block);
             }
         }
         return queryBlocks;
     }
 
-    private String getAnswerId(List<Relationship> relationships){
+    private String getAnswerId(List<Relationship> relationships) {
         String id = "";
-        for(Relationship relationship: relationships){
-            if(relationship.type() == RelationshipType.ANSWER){
+        for (Relationship relationship : relationships) {
+            if (relationship.type() == RelationshipType.ANSWER) {
                 id = relationship.ids().get(0);
                 break;
             }
@@ -109,10 +109,10 @@ public class OCRService {
         return id;
     }
 
-    private String getAnswer(List<Block> blocks, String blockId){
+    private String getAnswer(List<Block> blocks, String blockId) {
         String answer = "";
-        for(Block block : blocks){
-            if(Objects.equals(block.id(), blockId)){
+        for (Block block : blocks) {
+            if (Objects.equals(block.id(), blockId)) {
                 answer = block.text();
                 break;
             }
@@ -122,10 +122,10 @@ public class OCRService {
 
     private HashMap<String, String> mapQueriesToAnswers(List<Block> queryBlocks, List<Block> queryResultBlocks) {
         HashMap<String, String> hashMap = new HashMap<>();
-        for(Block block: queryBlocks){
+        for (Block block : queryBlocks) {
             String answerId = getAnswerId(block.relationships());
             String answer = getAnswer(queryResultBlocks, answerId);
-            if(!Objects.equals(answer, "")){
+            if (!Objects.equals(answer, "")) {
                 hashMap.put(block.query().alias(), answer);
             }
         }

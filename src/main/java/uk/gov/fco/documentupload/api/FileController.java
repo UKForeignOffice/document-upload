@@ -134,21 +134,21 @@ public class FileController {
                     } else {
                         log.info("File is clean, checking image quality");
                         boolean passedQualityCheck = true;
-                        for(FileUpload upload: uploads){
-                            if(!ocrService.passesQualityCheck(upload)){
+                        for (FileUpload upload : uploads) {
+                            if (!ocrService.passesQualityCheck(upload)) {
                                 passedQualityCheck = false;
                                 break;
                             }
                         }
-                        if(!passedQualityCheck){
+                        if (!passedQualityCheck) {
                             log.info("Quality check failed for file");
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                     .body(""));
-                        }else{
+                        } else {
                             log.info("File is good quality, extracting data");
                             String ocrResponse = "";
-                            for(FileUpload upload: uploads){
+                            for (FileUpload upload : uploads) {
                                 ocrResponse = ocrService.extractData(upload);
                             }
                             log.info(String.format("Extraction result: %s", ocrResponse));
