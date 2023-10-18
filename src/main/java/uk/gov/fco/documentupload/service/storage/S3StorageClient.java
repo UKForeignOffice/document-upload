@@ -1,5 +1,6 @@
 package uk.gov.fco.documentupload.service.storage;
 
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -21,7 +22,7 @@ public class S3StorageClient extends StorageClient {
 
     public S3StorageClient(@Value("${storage.s3.bucket}") @NonNull String bucket) {
         this.bucket = bucket;
-        amazonS3 = AmazonS3ClientBuilder.defaultClient();
+        amazonS3 = AmazonS3ClientBuilder.standard().withRegion("eu-west-2").withCredentials(new EnvironmentVariableCredentialsProvider()).build();
     }
 
     @Override

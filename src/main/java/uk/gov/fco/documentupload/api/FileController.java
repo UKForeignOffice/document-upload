@@ -64,7 +64,7 @@ public class FileController {
                     description = "No file was uploaded"),
             @ApiResponse(
                     responseCode = "422",
-                    description = "Uploaded file contains a virus"),
+                    description = "Uploaded file contains a virus or was too blurry"),
             @ApiResponse(
                     responseCode = "201",
                     description = "File stored successfully",
