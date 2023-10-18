@@ -130,7 +130,8 @@ public class FileController {
                         log.info("Virus scan failed for file");
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                .body("{\"error\": \"VirusScanError\", \"message\": \"Document contained a virus\"}"));
+                                .header("Content-Type", "application/json")
+                                .body("{\"message\": \"The selected file for [document_field] contained a virus\"}"));
                     } else {
                         log.info("File is clean, checking image quality");
                         boolean passedQualityCheck = true;
@@ -144,7 +145,8 @@ public class FileController {
                             log.info("Quality check failed for file");
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                    .body("{\"error\": \"QualityThresholdError\", \"message\": \"Document did not pass quality threshold\"}"));
+                                    .header("Content-Type", "application/json")
+                                    .body("{\"message\": \"The selected file for [document_field] was too blurry\"}"));
                         } else {
                             log.info("File is good quality, uploading file");
                             String id = storageClient.store(merger.merge(uploads));
