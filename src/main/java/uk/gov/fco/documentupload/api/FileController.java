@@ -131,7 +131,7 @@ public class FileController {
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                 .header("Content-Type", "application/json")
-                                .body("{\"message\": \"The selected file for [document_field] contained a virus\"}"));
+                                .body("virusError"));
                     } else {
                         log.info("File is clean, checking image quality");
                         boolean passedQualityCheck = true;
@@ -146,7 +146,7 @@ public class FileController {
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                                     .header("Content-Type", "application/json")
-                                    .body("{\"message\": \"The selected file for [document_field] was too blurry\"}"));
+                                    .body("qualityError"));
                         } else {
                             log.info("File is good quality, uploading file");
                             String id = storageClient.store(merger.merge(uploads));
