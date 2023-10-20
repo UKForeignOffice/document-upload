@@ -29,7 +29,7 @@ public class OCRService {
     public OCRService(@Value("${ocr.enabled}") @NotNull boolean enabled, @Value("${ocr.sharpness.threshold}") int sharpnessThreshold) {
         this.enabled = enabled;
         this.sharpnessThreshold = sharpnessThreshold;
-        rekognition = RekognitionClient.builder().region(Region.EU_WEST_2).credentialsProvider(EnvironmentVariableCredentialsProvider.create()).build();
+        rekognition = RekognitionClient.create();
     }
 
     public boolean passesQualityCheck(FileUpload upload) throws IOException {

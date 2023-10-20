@@ -22,7 +22,7 @@ public class S3StorageClient extends StorageClient {
 
     public S3StorageClient(@Value("${storage.s3.bucket}") @NonNull String bucket) {
         this.bucket = bucket;
-        amazonS3 = AmazonS3ClientBuilder.standard().withRegion("eu-west-2").withCredentials(new EnvironmentVariableCredentialsProvider()).build();
+        amazonS3 = AmazonS3ClientBuilder.defaultClient();
     }
 
     @Override
