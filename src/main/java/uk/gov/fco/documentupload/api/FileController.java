@@ -145,7 +145,6 @@ public class FileController {
                             log.info("Quality check failed for file");
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                    .header("Content-Type", "application/json")
                                     .body("qualityError"));
                         } else {
                             log.info("File is good quality, uploading file");
@@ -159,7 +158,7 @@ public class FileController {
                     log.info("No supported merger found", e);
                     output.setResult(ResponseEntity
                             .status(HttpStatus.BAD_REQUEST)
-                            .build());
+                            .body("fileTypeError"));
                 } catch (StorageException | IOException e) {
                     log.error("Error storing file", e);
                     output.setResult(ResponseEntity

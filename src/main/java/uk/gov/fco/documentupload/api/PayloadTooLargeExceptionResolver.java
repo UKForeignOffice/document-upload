@@ -9,6 +9,7 @@ import org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Component
 @Slf4j
@@ -18,6 +19,11 @@ public class PayloadTooLargeExceptionResolver extends AbstractHandlerExceptionRe
         if (ex instanceof MaxUploadSizeExceededException) {
             log.debug("Handling file size too large exception");
             response.setStatus(HttpStatus.PAYLOAD_TOO_LARGE.value());
+            try {
+                response.getWriter().write("fileSizeError");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             return new ModelAndView();
         }
         return null;
