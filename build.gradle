@@ -32,6 +32,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.10'
 
     compile 'com.amazonaws:aws-java-sdk-s3control:1.11.632'
+    compile 'software.amazon.awssdk:rekognition:2.20.162'
+    compile 'software.amazon.awssdk:sts:2.21.6'
     compile 'fi.solita.clamav:clamav-client:1.0.1'
     compile 'org.springdoc:springdoc-openapi-ui:1.1.39'
     compile 'org.springframework.boot:spring-boot-starter-web'

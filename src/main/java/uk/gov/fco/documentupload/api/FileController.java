@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
 import uk.gov.fco.documentupload.service.merger.Merger;
+import uk.gov.fco.documentupload.service.ocr.OCRService;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
 import uk.gov.fco.documentupload.service.storage.StorageClient;
 import uk.gov.fco.documentupload.service.storage.StorageException;
@@ -43,13 +44,17 @@ public class FileController {
 
     private Collection<Merger> mergers;
 
+    private OCRService ocrService;
+
     @Autowired
     public FileController(@NonNull AntiVirusService antiVirusService,
                           @NonNull StorageClient storageClient,
-                          @NonNull Collection<Merger> mergers) {
+                          @NonNull Collection<Merger> mergers,
+                          @NonNull OCRService ocrService) {
         this.antiVirusService = antiVirusService;
         this.storageClient = storageClient;
         this.mergers = mergers;
+        this.ocrService = ocrService;
     }
 
     @PostMapping
@@ -59,7 +64,7 @@ public class FileController {
                     description = "No file was uploaded"),
             @ApiResponse(
                     responseCode = "422",
-                    description = "Uploaded file contains a virus"),
+                    description = "Uploaded file contains a virus or was too blurry"),
             @ApiResponse(
                     responseCode = "201",
                     description = "File stored successfully",
@@ -74,7 +79,7 @@ public class FileController {
             summary = "Store a file",
             description = "Scans the file for viruses and returns the URL the file can be retrieved from."
     )
-    public DeferredResult<ResponseEntity<Void>> store(
+    public DeferredResult<ResponseEntity<String>> store(
             @Parameter(
                     name = "files",
                     description = "The files to store, max size 5mb",
@@ -89,7 +94,7 @@ public class FileController {
             UriComponentsBuilder builder) {
         log.debug("Storing {}", files);
 
-        DeferredResult<ResponseEntity<Void>> output = new DeferredResult<>(REQUEST_TIMEOUT);
+        DeferredResult<ResponseEntity<String>> output = new DeferredResult<>(REQUEST_TIMEOUT);
 
         if (files == null || files.isEmpty()) {
             output.setResult(ResponseEntity.badRequest().build());
@@ -125,20 +130,34 @@ public class FileController {
                         log.info("Virus scan failed for file");
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                .build());
+                                .body("virusError"));
                     } else {
-                        log.info("File is clean, storing");
-                        String id = storageClient.store(merger.merge(uploads));
-                        output.setResult(
-                                ResponseEntity
-                                        .created(builder.path("/files/{id}").build(id))
-                                        .build());
+                        log.info("File is clean, checking image quality");
+                        boolean passedQualityCheck = true;
+                        for (FileUpload upload : uploads) {
+                            if (!ocrService.passesQualityCheck(upload)) {
+                                passedQualityCheck = false;
+                                break;
+                            }
+                        }
+                        if (!passedQualityCheck) {
+                            log.info("Quality check failed for file");
+                            output.setResult(ResponseEntity
+                                    .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                                    .body("qualityError"));
+                        } else {
+                            log.info("File is good quality, uploading file");
+                            String id = storageClient.store(merger.merge(uploads));
+                            output.setResult(
+                                    ResponseEntity
+                                            .created(builder.path("/files/{id}").build(id)).build());
+                        }
                     }
                 } catch (NoSupportedMergerException e) {
                     log.info("No supported merger found", e);
                     output.setResult(ResponseEntity
                             .status(HttpStatus.BAD_REQUEST)
-                            .build());
+                            .body("fileTypeError"));
                 } catch (StorageException | IOException e) {
                     log.error("Error storing file", e);
                     output.setResult(ResponseEntity
