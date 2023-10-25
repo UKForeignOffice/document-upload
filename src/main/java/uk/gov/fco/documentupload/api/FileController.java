@@ -130,7 +130,6 @@ public class FileController {
                         log.info("Virus scan failed for file");
                         output.setResult(ResponseEntity
                                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                .header("Content-Type", "application/json")
                                 .body("virusError"));
                     } else {
                         log.info("File is clean, checking image quality");
