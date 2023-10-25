@@ -1,9 +1,12 @@
 package uk.gov.fco.documentupload.service.ocr;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.rekognition.model.*;
@@ -28,7 +31,7 @@ public class OCRService {
     public OCRService(@Value("${ocr.enabled}") @NotNull boolean enabled, @Value("${ocr.sharpness.threshold}") int sharpnessThreshold) {
         this.enabled = enabled;
         this.sharpnessThreshold = sharpnessThreshold;
-        rekognition = RekognitionClient.builder().region(Region.EU_WEST_2).build();
+        rekognition = RekognitionClient.builder().region(Region.EU_WEST_2).credentialsProvider(WebIdentityTokenFileCredentialsProvider.create()).build();
     }
 
     public boolean passesQualityCheck(FileUpload upload) throws IOException {
