@@ -137,14 +137,14 @@ public class FileController {
                         for (FileUpload upload : uploads) {
                             if (!ocrService.passesQualityCheck(upload)) {
                                 passedQualityCheck = false;
-                                break;
                             }
                         }
                         if (!passedQualityCheck) {
-                            log.info("Quality check failed for file");
-                            output.setResult(ResponseEntity
-                                    .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                    .body("qualityError"));
+                            log.info("Quality check failed for file. Uploading file and returning warning");
+                            String id = storageClient.store(merger.merge(uploads));
+                            output.setResult(
+                                    ResponseEntity
+                                            .created(builder.path("/files/{id}").build(id)).body("qualityWarning"));
                         } else {
                             log.info("File is good quality, uploading file");
                             String id = storageClient.store(merger.merge(uploads));
