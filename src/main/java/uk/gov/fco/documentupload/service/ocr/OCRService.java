@@ -12,6 +12,7 @@ import uk.gov.fco.documentupload.service.storage.FileUpload;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.util.Objects;
 
 import software.amazon.awssdk.services.rekognition.RekognitionClient;
 
@@ -33,17 +34,22 @@ public class OCRService {
     }
 
     public boolean passesQualityCheck(FileUpload upload) throws IOException {
-        if (enabled) {
+        if (enabled && !Objects.equals(upload.getContentType(), "application/pdf")) {
             log.info("Starting image quality check");
-            SdkBytes bytes = SdkBytes.fromInputStream(upload.getInputStream());
-            Image image = Image.builder().bytes(bytes).build();
-            DetectLabelsRequest request = DetectLabelsRequest.builder().image(image).featuresWithStrings("IMAGE_PROPERTIES").build();
-            DetectLabelsImageProperties results = rekognition.detectLabels(request).imageProperties();
-            Float sharpness = results.quality().sharpness();
-            log.info(String.format("Image sharpness: %s", sharpness.toString()));
-            boolean result = sharpness >= sharpnessThreshold;
-            log.info(String.format("Passes quality check: %s", result));
-            return result;
+            try {
+                SdkBytes bytes = SdkBytes.fromInputStream(upload.getInputStream());
+                Image image = Image.builder().bytes(bytes).build();
+                DetectLabelsRequest request = DetectLabelsRequest.builder().image(image).featuresWithStrings("IMAGE_PROPERTIES").build();
+                DetectLabelsImageProperties results = rekognition.detectLabels(request).imageProperties();
+                Float sharpness = results.quality().sharpness();
+                log.info(String.format("Image sharpness: %s", sharpness.toString()));
+                boolean result = sharpness >= sharpnessThreshold;
+                log.info(String.format("Passes quality check: %s", result));
+                return result;
+            } catch (Exception err) {
+                log.error("Image quality check failed, bypassing");
+                return true;
+            }
         }
         return true;
     }
