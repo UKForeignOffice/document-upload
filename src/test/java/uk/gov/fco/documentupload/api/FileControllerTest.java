@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
+import uk.gov.fco.documentupload.service.fileCheck.FileCheckService;
 import uk.gov.fco.documentupload.service.merger.Merger;
 import uk.gov.fco.documentupload.service.ocr.OCRService;
 import uk.gov.fco.documentupload.service.storage.FileStorageClient;
@@ -42,6 +43,9 @@ public class FileControllerTest {
 
     @Mock
     private OCRService ocrService;
+
+    @Mock
+    private FileCheckService fileCheckService;
 
     @Before
     public void setup() {

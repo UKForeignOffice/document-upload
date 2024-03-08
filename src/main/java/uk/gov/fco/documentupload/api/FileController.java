@@ -18,6 +18,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
+import uk.gov.fco.documentupload.service.fileCheck.FileCheckService;
 import uk.gov.fco.documentupload.service.merger.Merger;
 import uk.gov.fco.documentupload.service.ocr.OCRService;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
@@ -45,23 +46,19 @@ public class FileController {
 
     private OCRService ocrService;
 
-    private static final Set<String> VALID_CONTENT_TYPES = new HashSet<String>() {{
-        add("application/pdf");
-        add("image/png");
-        add("image/jpeg");
-        add("image/jpg");
-        add("image/gif");
-    }};
+    private FileCheckService fileCheckService;
 
     @Autowired
     public FileController(@NonNull AntiVirusService antiVirusService,
                           @NonNull StorageClient storageClient,
                           @NonNull Collection<Merger> mergers,
-                          @NonNull OCRService ocrService) {
+                          @NonNull OCRService ocrService,
+                          @NonNull FileCheckService fileCheckService) {
         this.antiVirusService = antiVirusService;
         this.storageClient = storageClient;
         this.mergers = mergers;
         this.ocrService = ocrService;
+        this.fileCheckService = fileCheckService;
     }
 
     @PostMapping
@@ -114,13 +111,11 @@ public class FileController {
             ForkJoinPool.commonPool().submit(() -> {
                 log.trace("Processing store file in separate thread");
                 try {
-                    Tika tika = new Tika();
                     List<FileUpload> uploads = new ArrayList<>();
                     for (MultipartFile file : files) {
                         FileUpload fileUpload = new FileUpload(file);
-                        String mimeType = tika.detect(fileUpload.getInputStream());
-                        if (!VALID_CONTENT_TYPES.contains(mimeType)) {
-                            log.info(String.format("Content type is invalid. Content type: %s", mimeType));
+                        if (!fileCheckService.isValidFileType(fileUpload.getInputStream())) {
+                            log.info("File MIME type is invalid");
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.BAD_REQUEST)
                                     .body("fileTypeError"));
