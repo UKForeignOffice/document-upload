@@ -41,6 +41,7 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-configuration-processor'
     compile 'org.apache.pdfbox:pdfbox:2.0.19'
     compile 'org.apache.pdfbox:pdfbox-tools:2.0.19'
+    compile 'org.apache.tika:tika-core:2.5.0'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
     testCompile 'org.springframework.security:spring-security-test'
