@@ -23,12 +23,11 @@ import uk.gov.fco.documentupload.service.ocr.OCRService;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
 import uk.gov.fco.documentupload.service.storage.StorageClient;
 import uk.gov.fco.documentupload.service.storage.StorageException;
+import org.apache.tika.Tika;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 
 @RestController
@@ -45,6 +44,14 @@ public class FileController {
     private Collection<Merger> mergers;
 
     private OCRService ocrService;
+
+    private static final Set<String> VALID_CONTENT_TYPES = new HashSet<String>() {{
+        add("application/pdf");
+        add("image/png");
+        add("image/jpeg");
+        add("image/jpg");
+        add("image/gif");
+    }};
 
     @Autowired
     public FileController(@NonNull AntiVirusService antiVirusService,
@@ -107,9 +114,17 @@ public class FileController {
             ForkJoinPool.commonPool().submit(() -> {
                 log.trace("Processing store file in separate thread");
                 try {
+                    Tika tika = new Tika();
                     List<FileUpload> uploads = new ArrayList<>();
                     for (MultipartFile file : files) {
                         FileUpload fileUpload = new FileUpload(file);
+                        String mimeType = tika.detect(fileUpload.getInputStream());
+                        if (!VALID_CONTENT_TYPES.contains(mimeType)) {
+                            log.info(String.format("Content type is invalid. Content type: %s", mimeType));
+                            output.setResult(ResponseEntity
+                                    .status(HttpStatus.BAD_REQUEST)
+                                    .body("fileTypeError"));
+                        }
                         uploads.add(fileUpload);
                     }
 
