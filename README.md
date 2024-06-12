@@ -22,6 +22,7 @@ can be overridden at deployment time using environment variables.
 | ANTIVIRUS_HOST       | localhost                               | Network host of the antivirus service                                 |
 | ANTIVIRUS_PORT       | 3310                                    | Network port of the antivirus service                                 |
 | ANTIVIRUS_TIMEOUT    | 30000                                   | Virus scanning timeout                                                |
+| CONTEXT_PATH         | /v1                                     | Context path for service
 | ENABLE_QUALITY_CHECK | false                                   | Whether to enable OCR quality check                                   |
 | SHARPNESS_THRESHOLD  | 60                                      | Threshold, in %, an image's sharpness must meet to pass quality check |
 
