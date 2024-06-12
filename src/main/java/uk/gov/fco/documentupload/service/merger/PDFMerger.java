@@ -1,5 +1,6 @@
 package uk.gov.fco.documentupload.service.merger;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.springframework.stereotype.Service;
@@ -8,7 +9,6 @@ import uk.gov.fco.documentupload.service.storage.FileUpload;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +39,9 @@ public class PDFMerger implements Merger {
 
         PDFMergerUtility merger = new PDFMergerUtility();
         for (FileUpload upload : uploads) {
-            merger.addSource(upload.getInputStream());
+            File tempFile = Files.createTempFile(UUID.randomUUID().toString() + "_" + upload.getName(), ".pdf").toFile();
+            FileUtils.copyInputStreamToFile(upload.getInputStream(), tempFile);
+            merger.addSource(tempFile);
         }
 
         File file = Files.createTempFile(UUID.randomUUID().toString(), ".pdf").toFile();

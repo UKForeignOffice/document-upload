@@ -26,7 +26,7 @@ import uk.gov.fco.documentupload.service.storage.StorageClient;
 import uk.gov.fco.documentupload.service.storage.StorageException;
 import org.apache.tika.Tika;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;

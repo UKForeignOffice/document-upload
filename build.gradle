@@ -1,55 +1,59 @@
 
 plugins {
-    id 'org.springframework.boot' version '2.1.2.RELEASE'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'application'
 }
 
 repositories {
     mavenCentral()
     maven { url "https://clojars.org/repo" }
-    jcenter()
 }
 
 apply plugin: 'java'
 apply plugin: 'io.spring.dependency-management'
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+sourceCompatibility = '17'
+targetCompatibility = '17'
 
-group = 'uk.gov.fco.dopcumentupload'
+group = 'uk.gov.fco.documentupload'
 version = '1.0.0'
 
-bootJar {
-    archiveName = 'document-upload.jar'
+application {
     mainClassName = 'uk.gov.fco.documentupload.Application'
+}
+
+bootJar {
+    archiveFileName = 'document-upload.jar'
     manifest {
         attributes "Implementation-Version": version
     }
 }
 
 dependencies {
-    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
     compileOnly 'org.projectlombok:lombok:1.18.10'
 
-    compile 'com.amazonaws:aws-java-sdk-s3control:1.11.632'
-    compile 'software.amazon.awssdk:rekognition:2.20.162'
-    compile 'software.amazon.awssdk:sts:2.21.6'
-    compile 'fi.solita.clamav:clamav-client:1.0.1'
-    compile 'org.springdoc:springdoc-openapi-ui:1.1.39'
-    compile 'org.springframework.boot:spring-boot-starter-web'
-    compile 'org.springframework.boot:spring-boot-starter-jersey'
-    compile 'org.springframework.boot:spring-boot-configuration-processor'
-    compile 'org.apache.pdfbox:pdfbox:2.0.19'
-    compile 'org.apache.pdfbox:pdfbox-tools:2.0.19'
-    compile 'org.apache.tika:tika-core:2.5.0'
-
-    testCompile 'org.springframework.boot:spring-boot-starter-test'
-    testCompile 'org.springframework.security:spring-security-test'
-    testCompile 'org.mockito:mockito-core:2.8.47'
+    implementation 'com.amazonaws:aws-java-sdk-s3control:1.12.740'
+    implementation 'software.amazon.awssdk:rekognition:2.20.162'
+    implementation 'software.amazon.awssdk:sts:2.21.6'
+    implementation 'fi.solita.clamav:clamav-client:1.0.1'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.8.0'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jersey'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.apache.pdfbox:pdfbox:2.0.31'
+    implementation 'org.apache.pdfbox:pdfbox-tools:2.0.31'
+    implementation 'org.apache.tika:tika-core:2.9.2'
+    implementation 'commons-io:commons-io:2.11.0'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.mockito:mockito-core:2.8.47'
 }
 
 compileJava.dependsOn(processResources)
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.6'
-}
+//task wrapper(type: Wrapper) {
+//    gradleVersion = '8.5'
+//}
