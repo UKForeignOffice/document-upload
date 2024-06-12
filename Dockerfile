@@ -1,4 +1,4 @@
-FROM openjdk:8-alpine
+FROM amazoncorretto:8-alpine-jdk
 
 ENV SPRING_PROFILES_ACTIVE production
 ENV ANTIVIRUS_ENABLED true

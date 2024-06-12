@@ -18,7 +18,7 @@ springdoc:
 server:
   port: 9000
   servlet:
-    context-path: /v1
+    context-path: ${CONTEXT_PATH:/v1}
 
 logging:
   pattern:
