@@ -26,9 +26,9 @@ public class FileCheckService {
         this.tika = new Tika();
     }
 
-    public Boolean isValidFileType(InputStream file) {
+    public Boolean isValidFileType(InputStream file, String fileName) {
         try {
-            String mimeType = this.tika.detect(file);
+            String mimeType = this.tika.detect(file, fileName);
             return VALID_CONTENT_TYPES.contains(mimeType);
         } catch (IOException e) {
             log.error("Could not determine file MIME type", e);

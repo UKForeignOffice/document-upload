@@ -114,7 +114,7 @@ public class FileController {
                     List<FileUpload> uploads = new ArrayList<>();
                     for (MultipartFile file : files) {
                         FileUpload fileUpload = new FileUpload(file);
-                        if (!fileCheckService.isValidFileType(fileUpload.getInputStream())) {
+                        if (!fileCheckService.isValidFileType(fileUpload.getInputStream(), fileUpload.getName())) {
                             log.info("File MIME type is invalid");
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.BAD_REQUEST)
