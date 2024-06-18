@@ -26,7 +26,7 @@ import uk.gov.fco.documentupload.service.storage.StorageClient;
 import uk.gov.fco.documentupload.service.storage.StorageException;
 import org.apache.tika.Tika;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
@@ -112,55 +112,59 @@ public class FileController {
                 log.trace("Processing store file in separate thread");
                 try {
                     List<FileUpload> uploads = new ArrayList<>();
+                    boolean isValidFileType = true;
                     for (MultipartFile file : files) {
                         FileUpload fileUpload = new FileUpload(file);
-                        if (!fileCheckService.isValidFileType(fileUpload.getInputStream())) {
+                        if (!fileCheckService.isValidFileType(fileUpload.getInputStream(), fileUpload.getName())) {
                             log.info("File MIME type is invalid");
+                            isValidFileType = false;
                             output.setResult(ResponseEntity
                                     .status(HttpStatus.BAD_REQUEST)
                                     .body("fileTypeError"));
-                        }
+                        } 
                         uploads.add(fileUpload);
                     }
+                    
+                    if (isValidFileType) {
+                        Merger merger = mergers.stream()
+                                .filter(m -> m.supports(uploads))
+                                .findFirst()
+                                .orElseThrow(NoSupportedMergerException::new);
 
-                    Merger merger = mergers.stream()
-                            .filter(m -> m.supports(uploads))
-                            .findFirst()
-                            .orElseThrow(NoSupportedMergerException::new);
-
-                    boolean clean = true;
-                    for (FileUpload upload : uploads) {
-                        if (!antiVirusService.isClean(upload)) {
-                            clean = false;
-                            break;
-                        }
-                    }
-
-                    if (!clean) {
-                        log.info("Virus scan failed for file");
-                        output.setResult(ResponseEntity
-                                .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                .body("virusError"));
-                    } else {
-                        log.info("File is clean, checking image quality");
-                        boolean passedQualityCheck = true;
+                        boolean clean = true;
                         for (FileUpload upload : uploads) {
-                            if (!ocrService.passesQualityCheck(upload)) {
-                                passedQualityCheck = false;
+                            if (!antiVirusService.isClean(upload)) {
+                                clean = false;
+                                break;
                             }
                         }
-                        if (!passedQualityCheck) {
-                            log.info("Quality check failed for file. Uploading file and returning warning");
-                            String id = storageClient.store(merger.merge(uploads));
-                            output.setResult(
-                                    ResponseEntity
-                                            .created(builder.path("/files/{id}").build(id)).body("qualityWarning"));
+
+                        if (!clean) {
+                            log.info("Virus scan failed for file");
+                            output.setResult(ResponseEntity
+                                    .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                                    .body("virusError"));
                         } else {
-                            log.info("File is good quality, uploading file");
-                            String id = storageClient.store(merger.merge(uploads));
-                            output.setResult(
-                                    ResponseEntity
-                                            .created(builder.path("/files/{id}").build(id)).build());
+                            log.info("File is clean, checking image quality");
+                            boolean passedQualityCheck = true;
+                            for (FileUpload upload : uploads) {
+                                if (!ocrService.passesQualityCheck(upload)) {
+                                    passedQualityCheck = false;
+                                }
+                            }
+                            if (!passedQualityCheck) {
+                                log.info("Quality check failed for file. Uploading file and returning warning");
+                                String id = storageClient.store(merger.merge(uploads));
+                                output.setResult(
+                                        ResponseEntity
+                                                .created(builder.path("/files/{id}").build(id)).body("qualityWarning"));
+                            } else {
+                                log.info("File is good quality, uploading file");
+                                String id = storageClient.store(merger.merge(uploads));
+                                output.setResult(
+                                        ResponseEntity
+                                                .created(builder.path("/files/{id}").build(id)).build());
+                            }
                         }
                     }
                 } catch (NoSupportedMergerException e) {

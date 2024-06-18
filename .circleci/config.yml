@@ -7,7 +7,7 @@ orbs:
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: cimg/openjdk:8.0
+    - image: cimg/openjdk:17.0.11
 
 jobs:
   test:
