@@ -40,3 +40,5 @@ considered permission to manage that file, e.g. delete it.
 ## Deployment
 
 The service should be packaged and deployed via Docker.
+
+TEST
