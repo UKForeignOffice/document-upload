@@ -97,7 +97,7 @@ jobs:
         type: string
 
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2204:current
 
     steps:
       - attach_workspace:
@@ -126,7 +126,6 @@ jobs:
           name: Install OpenVPN
           command: |
             sudo apt-get update
-            sudo apt-get install net-tools -y
             sudo apt-get install openvpn openvpn-systemd-resolved -y
 
       - run:
