@@ -20,6 +20,7 @@ public class FileCheckService {
         add("image/jpeg");
         add("image/jpg");
         add("image/gif");
+        add("application/vnd.oasis.opendocument.text");
     }};
 
     public FileCheckService() {
