@@ -126,7 +126,7 @@ jobs:
           name: Install OpenVPN
           command: |
             sudo apt-get update
-            sudo apt-get install openvpn openvpn-systemd-resolved -y
+            sudo apt-get install openvpn openvpn-systemd-resolved
 
       - run:
           name: Check IP before VPN connection
@@ -149,8 +149,8 @@ jobs:
               fi
             fi
 
-            SYS_RES_DNS=$(systemd-resolve --status | grep 'DNS Servers'|awk '{print $3}')
-            echo $SYS_RES_DNS
+            SYS_RES_DNS=$(resolvectl status | grep 'DNS Servers'|awk '{print $3}')
+            echo DNS: $SYS_RES_DNS
 
             phone_home=$(ss -Hnto state established '( sport = :ssh )' | head -n1 | awk '{ split($4, a, ":"); print a[1] }') || $(sudo netstat -an | grep ':22 .*ESTABLISHED' | head -n1 | awk '{ split($5, a, ":"); print a[1] }')
             echo $phone_home
@@ -179,7 +179,6 @@ jobs:
             done
 
             "${vpn_command[@]}" > /tmp/openvpn.log
-
       - run:
           name: Wait for the connection to be established and check IP
           command: |
