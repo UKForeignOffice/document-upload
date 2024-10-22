@@ -96,6 +96,8 @@ jobs:
         type: string
       package_name:
         type: string
+      deployment_name:
+        type: string
 
     machine:
       image: ubuntu-2204:current
@@ -199,7 +201,7 @@ jobs:
       - kubernetes/update-container-image:
           namespace: << parameters.namespace >>
           container-image-updates: << parameters.package_name >>=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat tag.txt`
-          resource-name: deployment/<< parameters.package_name >>
+          resource-name: deployment/<< parameters.deployment_name >>
 
 workflows:
   "Test, publish and deploy":
@@ -228,6 +230,7 @@ workflows:
           name: deploy
           namespace: fco-forms-test
           package_name: document-upload
+          deployment_name: documentupload
           context:
             - AWS
             - VPN
