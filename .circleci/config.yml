@@ -78,6 +78,7 @@ jobs:
       - run:
           name: Publish docker image
           command: |
+            cat ~/repo/tag.txt
             eval $(aws ecr get-login --no-include-email --region eu-west-2)
             docker build -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:latest -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat ~/repo/tag.txt` .
             docker image push --all-tags 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>
