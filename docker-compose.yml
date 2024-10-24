@@ -5,3 +5,8 @@ services:
     image: quay.io/ukhomeofficedigital/clamav:latest
     ports:
       - 3310:3310
+  api:
+    build: .
+    ports:
+      - 9000:9000
+
