@@ -78,6 +78,7 @@ jobs:
       - run:
           name: Publish docker image
           command: |
+            cat ~/repo/tag.txt
             eval $(aws ecr get-login --no-include-email --region eu-west-2)
             docker build -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:latest -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat ~/repo/tag.txt` .
             docker image push --all-tags 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>
@@ -95,9 +96,11 @@ jobs:
         type: string
       package_name:
         type: string
+      deployment_name:
+        type: string
 
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2204:current
 
     steps:
       - attach_workspace:
@@ -126,8 +129,7 @@ jobs:
           name: Install OpenVPN
           command: |
             sudo apt-get update
-            sudo apt-get install net-tools -y
-            sudo apt-get install openvpn openvpn-systemd-resolved -y
+            sudo apt-get install openvpn openvpn-systemd-resolved
 
       - run:
           name: Check IP before VPN connection
@@ -150,8 +152,8 @@ jobs:
               fi
             fi
 
-            SYS_RES_DNS=$(systemd-resolve --status | grep 'DNS Servers'|awk '{print $3}')
-            echo $SYS_RES_DNS
+            SYS_RES_DNS=$(resolvectl status | grep 'DNS Servers'|awk '{print $3}')
+            echo DNS: $SYS_RES_DNS
 
             phone_home=$(ss -Hnto state established '( sport = :ssh )' | head -n1 | awk '{ split($4, a, ":"); print a[1] }') || $(sudo netstat -an | grep ':22 .*ESTABLISHED' | head -n1 | awk '{ split($5, a, ":"); print a[1] }')
             echo $phone_home
@@ -180,7 +182,6 @@ jobs:
             done
 
             "${vpn_command[@]}" > /tmp/openvpn.log
-
       - run:
           name: Wait for the connection to be established and check IP
           command: |
@@ -199,8 +200,8 @@ jobs:
 
       - kubernetes/update-container-image:
           namespace: << parameters.namespace >>
-          container-image-updates: << parameters.package_name >>=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat tag.txt`
-          resource-name: deployment/<< parameters.package_name >>
+          container-image-updates: << parameters.deployment_name >>=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat tag.txt`
+          resource-name: deployment/<< parameters.deployment_name >>
 
 workflows:
   "Test, publish and deploy":
@@ -228,7 +229,8 @@ workflows:
       - deploy:
           name: deploy
           namespace: fco-forms-test
-          package_name: documentupload
+          package_name: document-upload
+          deployment_name: documentupload
           context:
             - AWS
             - VPN
