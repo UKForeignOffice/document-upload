@@ -80,8 +80,8 @@ jobs:
           command: |
             cat ~/repo/tag.txt
             eval $(aws ecr get-login --no-include-email --region eu-west-2)
-            docker build -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:latest -t 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat ~/repo/tag.txt` .
-            docker image push --all-tags 523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>
+            docker build -t 204473099916.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:latest -t 204473099916.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat ~/repo/tag.txt` .
+            docker image push --all-tags 204473099916.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>
 
       - persist_to_workspace:
           root: .
@@ -200,7 +200,7 @@ jobs:
 
       - kubernetes/update-container-image:
           namespace: << parameters.namespace >>
-          container-image-updates: << parameters.deployment_name >>=523508197323.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat tag.txt`
+          container-image-updates: << parameters.deployment_name >>=204473099916.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat tag.txt`
           resource-name: deployment/<< parameters.deployment_name >>
 
 workflows:
@@ -215,7 +215,7 @@ workflows:
           name: publish
           package_name: document-upload
           context:
-             - AWS
+             - AWS_MGMT
           requires:
             - test
           filters:
