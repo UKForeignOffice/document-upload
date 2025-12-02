@@ -3,6 +3,8 @@ FROM cimg/openjdk:17.0.11
 ENV SPRING_PROFILES_ACTIVE production
 ENV ANTIVIRUS_ENABLED false
 
+user root
+
 RUN mkdir -p /data
 COPY build/libs/document-upload.jar /data/app.jar
 
