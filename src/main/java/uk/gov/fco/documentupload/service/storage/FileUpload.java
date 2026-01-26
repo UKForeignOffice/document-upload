@@ -37,7 +37,8 @@ public class FileUpload {
         try {
             file.transferTo(path);
         } catch (MalformedStreamException e) {
-            log.debug("Ignoring malformed stream error");
+            log.error("Malformed upload stream for file {}: {}", this.name, e.getMessage());
+            throw new IOException("Malformed upload stream", e);
         }
     }
 
