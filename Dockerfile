@@ -1,7 +1,7 @@
-FROM amazoncorretto:17-alpine-jdk
+FROM cimg/openjdk:17.0.11
 
 ENV SPRING_PROFILES_ACTIVE production
-ENV ANTIVIRUS_ENABLED true
+ENV ANTIVIRUS_ENABLED false
 
 EXPOSE 9000
 
