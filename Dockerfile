@@ -8,4 +8,4 @@ EXPOSE 9000
 
 CMD java -jar /data/app.jar
 
-ADD build/libs/document-upload.jar /data/app.jar
+COPY build/libs/document-upload.jar /data/app.jar
