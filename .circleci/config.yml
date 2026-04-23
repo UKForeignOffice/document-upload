@@ -129,7 +129,7 @@ jobs:
           name: Install OpenVPN
           command: |
             sudo apt-get update
-            sudo apt-get install openvpn openvpn-systemd-resolved
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y openvpn openvpn-systemd-resolved
 
       - run:
           name: Check IP before VPN connection
@@ -215,7 +215,7 @@ workflows:
           name: publish
           package_name: document-upload
           context:
-             - AWS_MGMT
+            - AWS_MGMT
           requires:
             - test
           filters:
