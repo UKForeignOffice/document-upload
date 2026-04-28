@@ -2,7 +2,6 @@ version: "3.4"
 
 services:
   clamav:
-    image: quay.io/ukhomeofficedigital/clamav:latest
     image: clamav/clamav:1.4.3
     ports:
       - 3310:3310

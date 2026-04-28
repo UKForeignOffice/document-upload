@@ -1,4 +1,4 @@
-FROM cimg/openjdk:17.0.11
+FROM amazoncorretto:17-alpine-jdk
 
 ENV SPRING_PROFILES_ACTIVE production
 ENV ANTIVIRUS_ENABLED true
