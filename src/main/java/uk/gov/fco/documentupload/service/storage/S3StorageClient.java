@@ -1,10 +1,5 @@
 package uk.gov.fco.documentupload.service.storage;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +7,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import uk.gov.fco.documentupload.config.EnvironmentUtil;
 
 import java.io.InputStream;
+import java.net.URI;
 
 @Service
 @ConditionalOnProperty(name = "storage.engine", havingValue = "s3")
@@ -24,7 +29,7 @@ public class S3StorageClient extends StorageClient {
 
     private String bucket;
 
-    private AmazonS3 amazonS3;
+    private S3Client s3Client;
 
     public S3StorageClient(@Value("${storage.s3.bucket}") @NonNull String bucket, Environment environment) {
         this.bucket = bucket;
@@ -34,13 +39,14 @@ public class S3StorageClient extends StorageClient {
             String endpoint = System.getenv("AWS_ENDPOINT");
             String region = System.getenv("AWS_REGION");
 
-            amazonS3 = AmazonS3ClientBuilder.standard()
-                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region))
-                    .withPathStyleAccessEnabled(true)
+            s3Client = S3Client.builder()
+                    .endpointOverride(URI.create(endpoint))
+                    .forcePathStyle(true)
+                    .region(Region.of(region))
                     .build();
         } else {
             log.info("Using S3 storage in non-development mode");
-            amazonS3 = AmazonS3ClientBuilder.defaultClient();
+            s3Client = S3Client.create();
         }
     }
 
@@ -48,12 +54,16 @@ public class S3StorageClient extends StorageClient {
     public String store(FileUpload file) throws StorageException {
         String id = toId(file);
 
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(file.getSize());
-        metadata.setContentType(file.getContentType());
-
         try {
-            amazonS3.putObject(bucket, id, file.getInputStream(), metadata);
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(id)
+                            .contentType(file.getContentType())
+                            .contentLength(file.getSize())
+                            .build(),
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+            );
             return id;
         } catch (Exception e) {
             throw new StorageException("Error uploading file to S3", e);
@@ -63,8 +73,9 @@ public class S3StorageClient extends StorageClient {
     @Override
     public long getSize(String id) throws StorageException {
         try {
-            ObjectMetadata metadata = amazonS3.getObjectMetadata(bucket, id);
-            return metadata.getContentLength();
+            HeadObjectResponse response = s3Client.headObject(
+                    HeadObjectRequest.builder().bucket(bucket).key(id).build());
+            return response.contentLength();
         } catch (Exception e) {
             throw new StorageException("Error retrieving file size from S3", e);
         }
@@ -73,8 +84,9 @@ public class S3StorageClient extends StorageClient {
     @Override
     public String getContentType(String id) throws StorageException {
         try {
-            ObjectMetadata metadata = amazonS3.getObjectMetadata(bucket, id);
-            return metadata.getContentType();
+            HeadObjectResponse response = s3Client.headObject(
+                    HeadObjectRequest.builder().bucket(bucket).key(id).build());
+            return response.contentType();
         } catch (Exception e) {
             throw new StorageException("Error retrieving file content type from S3", e);
         }
@@ -83,8 +95,8 @@ public class S3StorageClient extends StorageClient {
     @Override
     public InputStream get(String id) throws StorageException {
         try {
-            S3Object object = amazonS3.getObject(bucket, id);
-            return object.getObjectContent();
+            return s3Client.getObject(
+                    GetObjectRequest.builder().bucket(bucket).key(id).build());
         } catch (Exception e) {
             throw new StorageException("Error retrieving file from S3", e);
         }
@@ -93,7 +105,10 @@ public class S3StorageClient extends StorageClient {
     @Override
     public boolean exists(String id) throws StorageException {
         try {
-            return amazonS3.doesObjectExist(bucket, id);
+            s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(id).build());
+            return true;
+        } catch (NoSuchKeyException e) {
+            return false;
         } catch (Exception e) {
             throw new StorageException("Error checking file exists in S3", e);
         }
@@ -102,7 +117,8 @@ public class S3StorageClient extends StorageClient {
     @Override
     public void delete(String id) throws StorageException {
         try {
-            amazonS3.deleteObject(bucket, id);
+            s3Client.deleteObject(
+                    DeleteObjectRequest.builder().bucket(bucket).key(id).build());
         } catch (Exception e) {
             throw new StorageException("Error deleting file from S3", e);
         }

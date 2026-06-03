@@ -1,6 +1,8 @@
 package uk.gov.fco.documentupload.service.merger;
 
 import lombok.NonNull;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +65,7 @@ public class PDFAndImageMerger implements Merger {
 
     private List<FileUpload> convertToImages(FileUpload upload) throws IOException {
         List<FileUpload> converted = new ArrayList<>();
-        try (PDDocument document = PDDocument.load(upload.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBuffer(upload.getInputStream()))) {
             PDFRenderer renderer = new PDFRenderer(document);
             for (int page = 0; page < document.getNumberOfPages(); page++) {
                 File file = Files.createTempFile(UUID.randomUUID().toString(), ".png").toFile();

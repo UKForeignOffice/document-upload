@@ -37,6 +37,39 @@ ClamAV service is configured in `docker-compose.yml`.
 There are no explicit access controls to this service. Knowledge of a file ID is 
 considered permission to manage that file, e.g. delete it.
 
+## Updating dependencies
+
+The project uses the [Ben Manes versions plugin](https://github.com/ben-manes/gradle-versions-plugin) and [use-latest-versions plugin](https://github.com/patrikerdes/gradle-use-latest-versions-plugin) to manage dependency updates.
+
+To check what is out of date:
+
+```sh
+./gradlew dependencyUpdates
+```
+
+To automatically update all dependency versions in `build.gradle`:
+
+```sh
+./gradlew useLatestVersions
+```
+
+The following version constraints are enforced in `dependencyUpdates` to avoid breaking changes:
+
+- **Spring Boot**: pinned to 3.x — Spring Boot 4.x is a major migration and requires Jakarta EE 11 and Spring Framework 7.
+- **springdoc-openapi**: pinned to 2.x — springdoc 3.x targets Spring Boot 4.x and is incompatible with Spring Boot 3.x.
+- **Unstable versions**: alpha, beta, RC, milestone, and preview releases are excluded.
+
+### AWS SDK
+
+All three `software.amazon.awssdk` modules (`s3`, `rekognition`, `sts`) should be kept on the same version as they are part of the same SDK release.
+
+### pdfbox
+
+The project uses pdfbox 3.x. The following API differences from 2.x apply:
+
+- `PDDocument.load(InputStream)` → `Loader.loadPDF(new RandomAccessReadBuffer(inputStream))`
+- `merger.mergeDocuments(MemoryUsageSetting)` → `merger.mergeDocuments(null)`
+
 ## Deployment
 
 The service should be packaged and deployed via Docker.

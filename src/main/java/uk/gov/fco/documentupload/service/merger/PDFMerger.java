@@ -1,7 +1,6 @@
 package uk.gov.fco.documentupload.service.merger;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.springframework.stereotype.Service;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
@@ -47,7 +46,7 @@ public class PDFMerger implements Merger {
         File file = Files.createTempFile(UUID.randomUUID().toString(), ".pdf").toFile();
 
         merger.setDestinationFileName(file.getAbsolutePath());
-        merger.mergeDocuments(MemoryUsageSetting.setupMixed(20 * 1024 * 1024));
+        merger.mergeDocuments(null);
 
         return new FileUpload("application/pdf", file);
     }

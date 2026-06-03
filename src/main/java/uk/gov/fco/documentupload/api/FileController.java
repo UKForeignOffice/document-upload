@@ -185,7 +185,7 @@ public class FileController {
         return output;
     }
 
-    @GetMapping("/{id:.+}")
+    @GetMapping("/{id}")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -237,7 +237,7 @@ public class FileController {
         response.flushBuffer();
     }
 
-    @DeleteMapping("/{id:.+}")
+    @DeleteMapping("/{id}")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "204",
