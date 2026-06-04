@@ -13,11 +13,11 @@ def isNonStable = { String version ->
     return unstableKeyword
 }
 
-def isSpringBoot4 = { ModuleComponentIdentifier id ->
+def isSpringBoot4 = { id ->
     id.group == 'org.springframework.boot' && id.version.startsWith('4.')
 }
 
-def isSpringDoc3 = { ModuleComponentIdentifier id ->
+def isSpringDoc3 = { id ->
     id.group == 'org.springdoc' && id.version.startsWith('3.')
 }
 
@@ -34,7 +34,6 @@ repositories {
     maven { url = "https://clojars.org/repo" }
 }
 
-apply plugin: 'java'
 apply plugin: 'io.spring.dependency-management'
 
 java {

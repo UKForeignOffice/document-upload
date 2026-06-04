@@ -62,7 +62,7 @@ jobs:
 
       - run:
           name: Install awscli
-          command: pip3 install awscli
+          command: pip3 install --upgrade awscli
 
       - run:
           name: "set $DOCKER_TAG"
@@ -79,7 +79,7 @@ jobs:
           name: Publish docker image
           command: |
             cat ~/repo/tag.txt
-            eval $(aws ecr get-login --no-include-email --region eu-west-2)
+            aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin 204473099916.dkr.ecr.eu-west-2.amazonaws.com
             docker build -t 204473099916.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:latest -t 204473099916.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>:`cat ~/repo/tag.txt` .
             docker image push --all-tags 204473099916.dkr.ecr.eu-west-2.amazonaws.com/fco/<< parameters.package_name >>
 
