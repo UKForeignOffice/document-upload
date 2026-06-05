@@ -8,13 +8,12 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 70MB
-  web:
-    resources:
-      add-mappings: false
 
 springdoc:
   api-docs:
     path: /api-docs
+  swagger-ui:
+    enabled: false
 
 server:
   port: 9000
