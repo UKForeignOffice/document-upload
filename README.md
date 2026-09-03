@@ -53,23 +53,6 @@ To automatically update all dependency versions in `build.gradle`:
 ./gradlew useLatestVersions
 ```
 
-The following version constraints are enforced in `dependencyUpdates` to avoid breaking changes:
-
-- **Spring Boot**: pinned to 3.x — Spring Boot 4.x is a major migration and requires Jakarta EE 11 and Spring Framework 7.
-- **springdoc-openapi**: pinned to 2.x — springdoc 3.x targets Spring Boot 4.x and is incompatible with Spring Boot 3.x.
-- **Unstable versions**: alpha, beta, RC, milestone, and preview releases are excluded.
-
-### AWS SDK
-
-All three `software.amazon.awssdk` modules (`s3`, `rekognition`, `sts`) should be kept on the same version as they are part of the same SDK release.
-
-### pdfbox
-
-The project uses pdfbox 3.x. The following API differences from 2.x apply:
-
-- `PDDocument.load(InputStream)` → `Loader.loadPDF(new RandomAccessReadBuffer(inputStream))`
-- `merger.mergeDocuments(MemoryUsageSetting)` → `merger.mergeDocuments(null)`
-
 ## Deployment
 
 The service should be packaged and deployed via Docker.
