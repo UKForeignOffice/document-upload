@@ -8,6 +8,7 @@ plugins {
 
 group = 'uk.gov.fco.documentupload'
 version = '1.0.0'
+ext['tomcat.version'] = '11.0.25'
 
 java {
     toolchain {
