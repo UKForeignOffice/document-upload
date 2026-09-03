@@ -1,8 +1,7 @@
 package uk.gov.fco.documentupload.service.storage;
 
 import lombok.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.env.Environment;
@@ -10,31 +9,24 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import uk.gov.fco.documentupload.config.EnvironmentUtil;
+import software.amazon.awssdk.services.s3.model.*;
+import uk.gov.fco.documentupload.Config;
 
 import java.io.InputStream;
 import java.net.URI;
 
 @Service
 @ConditionalOnProperty(name = "storage.engine", havingValue = "s3")
+@Slf4j
 public class S3StorageClient extends StorageClient {
 
-    private static final Logger log = LoggerFactory.getLogger(S3StorageClient.class);
-
-    private String bucket;
-
-    private S3Client s3Client;
+    private final String bucket;
+    private final S3Client s3Client;
 
     public S3StorageClient(@Value("${storage.s3.bucket}") @NonNull String bucket, Environment environment) {
         this.bucket = bucket;
 
-        if (EnvironmentUtil.isDevelopment(environment)) {
+        if (Config.isDevelopment(environment)) {
             log.info("Using S3 storage in development mode");
             String endpoint = System.getenv("AWS_ENDPOINT");
             String region = System.getenv("AWS_REGION");
