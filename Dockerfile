@@ -1,7 +1,7 @@
 FROM ibm-semeru-runtimes:open-25-jre
 
-ENV SPRING_PROFILES_ACTIVE production
-ENV ANTIVIRUS_ENABLED true
+ENV SPRING_PROFILES_ACTIVE=production
+ENV ANTIVIRUS_ENABLED=true
 
 WORKDIR /app
 COPY build/libs/*.jar .
