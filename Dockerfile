@@ -1,12 +1,14 @@
-FROM amazoncorretto:17-alpine-jdk
+FROM ibm-semeru-runtimes:open-25-jre
 
 ENV SPRING_PROFILES_ACTIVE production
 ENV ANTIVIRUS_ENABLED true
 
-RUN mkdir -p /data
-COPY build/libs/document-upload.jar /data/app.jar
+WORKDIR /app
+COPY build/libs/*.jar .
 
-USER 1001
-EXPOSE 9000
+ENV SERVER_PORT=9000
+EXPOSE $SERVER_PORT
 
-CMD ["java", "-jar", "/data/app.jar"]
+USER www-data
+HEALTHCHECK CMD curl -f "http://localhost:$SERVER_PORT/v1/actuator/health" || exit 1
+CMD ["java", "-jar", "document-upload-1.0.0.jar"]

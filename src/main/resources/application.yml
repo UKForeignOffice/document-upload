@@ -1,9 +1,11 @@
-
 spring:
+  main:
+    banner-mode: off
+  threads:
+    virtual:
+      enabled: true
   jackson:
     default-property-inclusion: non_absent
-    serialization:
-      write_dates_as_timestamps: false
   servlet:
     multipart:
       max-file-size: 5MB
@@ -19,14 +21,15 @@ server:
   port: 9000
   servlet:
     context-path: ${CONTEXT_PATH:/v1}
+  compression:
+    enabled: true
 
 logging:
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-  level:
-    root: ${ROOT_LOGGING_LEVEL:DEBUG}
-    org.apache: INFO
-    org.springframework: INFO
+    console: "%logger{15} %msg%n"
+
+app:
+  mime-types: "application/pdf,image/png,image/jpeg,image/jpg,image/gif,application/vnd.oasis.opendocument.text"
 
 antivirus:
   enabled: ${ANTIVIRUS_ENABLED:false}

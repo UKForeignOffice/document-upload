@@ -1,35 +1,27 @@
-package uk.gov.fco.documentupload.service.antivirus;
+package uk.gov.fco.documentupload.service;
 
 import fi.solita.clamav.ClamAVClient;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.gov.fco.documentupload.config.AntiVirusProperties;
+import uk.gov.fco.documentupload.AntiVirusProperties;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class AntiVirusService {
 
-    private ClamAVClient clamAVClient;
-
-    private boolean enabled;
-
-    @Autowired
-    public AntiVirusService(@NonNull ClamAVClient clamAVClient,
-                            @NonNull AntiVirusProperties antiVirusProperties) {
-        this.clamAVClient = clamAVClient;
-        this.enabled = antiVirusProperties.isEnabled();
-    }
+    private final ClamAVClient client;
+    private final AntiVirusProperties properties;
 
     public boolean isClean(FileUpload upload) throws IOException {
-        if (enabled) {
+        if (properties.enabled()) {
             log.trace("Scanning file for viruses");
-            byte[] reply = clamAVClient.scan(upload.getInputStream());
+            byte[] reply = client.scan(upload.getInputStream());
             if (!ClamAVClient.isCleanReply(reply)) {
                 String detail = new String(reply, StandardCharsets.US_ASCII);
                 log.warn("File contains virus, detail = {}", detail);

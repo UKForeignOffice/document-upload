@@ -17,15 +17,11 @@ import java.util.UUID;
 @Slf4j
 public class FileUpload {
 
-    private String id = UUID.randomUUID().toString();
-
-    private long size;
-
-    private String name;
-
-    private String contentType;
-
-    private Path path;
+    private final String id = UUID.randomUUID().toString();
+    private final long size;
+    private final String name;
+    private final String contentType;
+    private final Path path;
 
     public FileUpload(@NonNull MultipartFile file) throws IOException {
         this.size = file.getSize();

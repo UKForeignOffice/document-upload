@@ -7,59 +7,43 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import lombok.NonNull;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
-import uk.gov.fco.documentupload.service.antivirus.AntiVirusService;
-import uk.gov.fco.documentupload.service.fileCheck.FileCheckService;
+import uk.gov.fco.documentupload.service.AntiVirusService;
+import uk.gov.fco.documentupload.service.FileCheckService;
+import uk.gov.fco.documentupload.service.OCRService;
 import uk.gov.fco.documentupload.service.merger.Merger;
-import uk.gov.fco.documentupload.service.ocr.OCRService;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
 import uk.gov.fco.documentupload.service.storage.StorageClient;
 import uk.gov.fco.documentupload.service.storage.StorageException;
-import org.apache.tika.Tika;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
 @RestController
 @RequestMapping("/files")
+@RequiredArgsConstructor
 @Slf4j
 public class FileController {
 
     private static final Long REQUEST_TIMEOUT = 120000L; // Allow 2 minute timeout for scanning and storage
 
-    private AntiVirusService antiVirusService;
-
-    private StorageClient storageClient;
-
-    private Collection<Merger> mergers;
-
-    private OCRService ocrService;
-
-    private FileCheckService fileCheckService;
-
-    @Autowired
-    public FileController(@NonNull AntiVirusService antiVirusService,
-                          @NonNull StorageClient storageClient,
-                          @NonNull Collection<Merger> mergers,
-                          @NonNull OCRService ocrService,
-                          @NonNull FileCheckService fileCheckService) {
-        this.antiVirusService = antiVirusService;
-        this.storageClient = storageClient;
-        this.mergers = mergers;
-        this.ocrService = ocrService;
-        this.fileCheckService = fileCheckService;
-    }
+    private final AntiVirusService antiVirusService;
+    private final StorageClient storageClient;
+    private final Collection<Merger> mergers;
+    private final OCRService ocrService;
+    private final FileCheckService fileCheckService;
 
     @PostMapping
     @ApiResponses({

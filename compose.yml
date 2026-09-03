@@ -1,0 +1,23 @@
+services:
+  clamav:
+    image: clamav/clamav:stable-debian
+    restart: unless-stopped
+    environment:
+      CLAMAV_NO_FRESHCLAMD: true
+    healthcheck:
+      test: "echo PING | nc localhost 3310 | grep -q PONG"
+    ports:
+      - ${CLAMAV_PORT:-3310}:3310
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+
+  api:
+    build: .
+    environment:
+      STORAGE_ENGINE: file
+    depends_on:
+      - clamav
+    ports:
+      - ${SERVER_PORT:-9000}:9000

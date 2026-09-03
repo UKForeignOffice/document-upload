@@ -1,40 +1,29 @@
-package uk.gov.fco.documentupload.service.ocr;
+package uk.gov.fco.documentupload.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.rekognition.model.*;
+import software.amazon.awssdk.services.rekognition.RekognitionClient;
+import software.amazon.awssdk.services.rekognition.model.DetectLabelsImageProperties;
+import software.amazon.awssdk.services.rekognition.model.DetectLabelsRequest;
+import software.amazon.awssdk.services.rekognition.model.Image;
+import uk.gov.fco.documentupload.OcrProperties;
 import uk.gov.fco.documentupload.service.storage.FileUpload;
 
-import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.Objects;
 
-import software.amazon.awssdk.services.rekognition.RekognitionClient;
-
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class OCRService {
-    private boolean enabled;
 
-    private int sharpnessThreshold;
-
-    private RekognitionClient rekognition;
-
-
-    @Autowired
-    public OCRService(@Value("${ocr.enabled}") @NotNull boolean enabled, @Value("${ocr.sharpness.threshold}") int sharpnessThreshold) {
-        this.enabled = enabled;
-        this.sharpnessThreshold = sharpnessThreshold;
-        rekognition = RekognitionClient.builder().region(Region.EU_WEST_2).credentialsProvider(WebIdentityTokenFileCredentialsProvider.create()).build();
-    }
+    private final OcrProperties properties;
+    private final RekognitionClient rekognition;
 
     public boolean passesQualityCheck(FileUpload upload) throws IOException {
-        if (enabled && !Objects.equals(upload.getContentType(), "application/pdf")) {
+        if (properties.enabled() && !Objects.equals(upload.getContentType(), "application/pdf")) {
             log.info("Starting image quality check");
             try {
                 SdkBytes bytes = SdkBytes.fromInputStream(upload.getInputStream());
@@ -43,7 +32,7 @@ public class OCRService {
                 DetectLabelsImageProperties results = rekognition.detectLabels(request).imageProperties();
                 Float sharpness = results.quality().sharpness();
                 log.info(String.format("Image sharpness: %s", sharpness.toString()));
-                boolean result = sharpness >= sharpnessThreshold;
+                boolean result = sharpness >= properties.sharpness().threshold();
                 log.info(String.format("Passes quality check: %s", result));
                 return result;
             } catch (Exception err) {

@@ -1,88 +1,66 @@
-
 plugins {
-    id 'org.springframework.boot' version '3.5.14'
-    id 'application'
-    id 'com.github.ben-manes.versions' version '0.54.0'
-    id 'se.patrikerdes.use-latest-versions' version '0.2.19'
-}
-
-def isNonStable = { String version ->
-    def unstableKeyword = ['alpha', 'beta', 'rc', 'cr', 'm', 'preview', 'b', 'ea'].any {
-        version.toLowerCase().contains(it)
-    }
-    return unstableKeyword
-}
-
-def isSpringBoot4 = { id ->
-    id.group == 'org.springframework.boot' && id.version.startsWith('4.')
-}
-
-def isSpringDoc3 = { id ->
-    id.group == 'org.springdoc' && id.version.startsWith('3.')
-}
-
-dependencyUpdates {
-    rejectVersionIf { selection ->
-        isNonStable(selection.candidate.version) ||
-        isSpringBoot4(selection.candidate) ||
-        isSpringDoc3(selection.candidate)
-    }
-}
-
-repositories {
-    mavenCentral()
-    maven { url = "https://clojars.org/repo" }
-}
-
-apply plugin: 'io.spring.dependency-management'
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    id 'java-library'
+    id 'org.springframework.boot' version '4.+'
+    id 'io.spring.dependency-management' version '1.+'
 }
 
 group = 'uk.gov.fco.documentupload'
 version = '1.0.0'
 
-application {
-    mainClass = 'uk.gov.fco.documentupload.Application'
-}
-
-bootJar {
-    archiveFileName = 'document-upload.jar'
-    manifest {
-        attributes "Implementation-Version": version
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
+jar {
+    enabled = false
+    archiveFileName = bootJar.archiveFileName
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+    implementation platform('software.amazon.awssdk:bom:2.+')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:sts'
+    implementation 'software.amazon.awssdk:rekognition'
 
-    compileOnly 'org.projectlombok:lombok:1.18.46'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.+'
 
-    implementation 'software.amazon.awssdk:s3:2.46.2'
-    implementation 'software.amazon.awssdk:rekognition:2.46.2'
-    implementation 'software.amazon.awssdk:sts:2.46.2'
-    implementation 'fi.solita.clamav:clamav-client:1.0.1'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-jersey'
-    implementation 'org.springframework.boot:spring-boot-configuration-processor'
-    implementation 'org.apache.pdfbox:pdfbox:3.0.7'
-    implementation 'org.apache.pdfbox:pdfbox-tools:3.0.7'
-    implementation 'org.apache.tika:tika-core:3.3.1'
-    implementation 'commons-io:commons-io:2.22.0'
+    implementation 'fi.solita.clamav:clamav-client:1.0.+'
+    implementation 'org.apache.pdfbox:pdfbox:3.0.+'
+    implementation 'org.apache.pdfbox:pdfbox-tools:3.0.+'
+    implementation 'org.apache.tika:tika-core:3.3.+'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api'
-    testImplementation 'org.mockito:mockito-core:5.23.0'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    if (System.getProperty("os.name").toLowerCase().contains("mac") &&
+            System.getProperty("os.arch").toLowerCase().contains("aarch64")) {
+        runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.+:osx-aarch_64'
+    }
 }
 
-test {
+tasks.named('test') {
     useJUnitPlatform()
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
 }
 
-compileJava.dependsOn(processResources)

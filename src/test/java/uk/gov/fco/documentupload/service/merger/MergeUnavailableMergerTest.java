@@ -9,13 +9,13 @@ import uk.gov.fco.documentupload.service.storage.FileUpload;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MergeUnavailableMergerTest {
-    private MergeUnavailableMerger merger = new MergeUnavailableMerger();
 
+    private final MergeUnavailableMerger merger = new MergeUnavailableMerger();
 
     @Test
     public void shouldThrowIfThereIsMoreThanOneFile() throws Exception {
