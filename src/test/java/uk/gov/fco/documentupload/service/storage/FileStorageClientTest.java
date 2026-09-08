@@ -3,6 +3,7 @@ package uk.gov.fco.documentupload.service.storage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 @SpringBootTest(classes = TestConfig.class)
+@Isolated
 public class FileStorageClientTest {
 
     private FileStorageClient fileStorageClient;
