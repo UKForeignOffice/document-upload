@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'jacoco'
     id 'org.springframework.boot' version '4.1.+'
     id 'io.spring.dependency-management' version '1.+'
     id 'io.github.ben-manes.versions' version '0.61.0'
@@ -67,3 +68,8 @@ tasks.named('test') {
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
 }
 
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
+}
