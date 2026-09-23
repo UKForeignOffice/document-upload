@@ -3,7 +3,7 @@ plugins {
     id 'jacoco'
     id 'org.springframework.boot' version '4.1.+'
     id 'io.spring.dependency-management' version '1.+'
-    id 'io.github.ben-manes.versions' version '0.61.0'
+    id 'io.github.ben-manes.versions' version '0.64.0'
     id 'se.patrikerdes.use-latest-versions' version '0.2.19'
 }
 
@@ -30,6 +30,14 @@ configurations {
 
 repositories {
     mavenCentral()
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'org.bouncycastle:bcprov-jdk18on:1.85'
+        force 'org.bouncycastle:bcpkix-jdk18on:1.85'
+        force 'org.bouncycastle:bcutil-jdk18on:1.85'
+    }
 }
 
 dependencies {
