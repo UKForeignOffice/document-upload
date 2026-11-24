@@ -53,6 +53,21 @@ To automatically update all dependency versions in `build.gradle`:
 ./gradlew useLatestVersions
 ```
 
+To scan resolved runtime and buildscript dependencies for vulnerabilities:
+
+```sh
+./gradlew -Psbom cyclonedxDirectBom
+osv-scanner scan source \
+  --lockfile build/reports/cyclonedx-direct/bom.json \
+  --format html --all-vulns --all-packages \
+  --offline --download-offline-databases \
+  --output-file build/osv-report.html
+```
+
+The scanner downloads a public vulnerability database and checks packages locally.
+The SBOM plugin is enabled only with `-Psbom`; the scan does not cover the JDK
+or Gradle distribution.
+
 ## Deployment
 
 The service should be packaged and deployed via Docker.

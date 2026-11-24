@@ -18,7 +18,7 @@ public class PayloadTooLargeExceptionResolver extends AbstractHandlerExceptionRe
     protected ModelAndView doResolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         if (ex instanceof MaxUploadSizeExceededException) {
             log.debug("Handling file size too large exception");
-            response.setStatus(HttpStatus.PAYLOAD_TOO_LARGE.value());
+            response.setStatus(HttpStatus.CONTENT_TOO_LARGE.value());
             try {
                 response.getWriter().write("fileSizeError");
             } catch (IOException e) {
