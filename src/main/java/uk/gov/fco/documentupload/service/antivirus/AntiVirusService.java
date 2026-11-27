@@ -30,6 +30,7 @@ public class AntiVirusService {
         if (enabled) {
             log.trace("Scanning file for viruses");
             byte[] reply = clamAVClient.scan(upload.getInputStream());
+            log.info("File reply {}", new String(reply, StandardCharsets.US_ASCII));
             if (!ClamAVClient.isCleanReply(reply)) {
                 String detail = new String(reply, StandardCharsets.US_ASCII);
                 log.warn("File contains virus, detail = {}", detail);

@@ -6,9 +6,19 @@ services:
     platform: linux/amd64
     ports:
       - 3310:3310
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo PING | nc -w 2 localhost 3310 | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
   api:
     build: .
     depends_on:
-      - clamav
+      clamav:
+        condition: service_healthy
+    environment:
+      ANTIVIRUS_HOST: clamav
+      ANTIVIRUS_PORT: 3310
     ports:
       - 9000:9000
